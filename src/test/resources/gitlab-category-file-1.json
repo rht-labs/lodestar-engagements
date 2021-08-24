@@ -1,0 +1,55 @@
+{
+  "file_name": "category.json",
+  "file_path": "engagement/category.json",
+  "size": 724,
+  "encoding": "base64",
+  "content_sha256": "7c8ed2ed8f121888212c50235c8e34c250dec893f3b7e00015613713ab1141eb",
+  "ref": "master",
+  "blob_id": "blob",
+  "commit_id": "tiommc",
+  "last_commit_id": "7",
+  "categories": [ {
+    "uuid" : "c9ff13b9-4da7-4bf9-b57e-574883a05347",
+    "created" : "2021-08-20T04:11:16.707Z",
+    "engagement_uuid" : "uuid1",
+    "name" : "mat",
+    "region" : "na"
+  }, {
+    "uuid" : "8b1e2db0-3f6c-4cca-9faa-21aa229f5daf",
+    "created" : "2021-08-20T04:11:16.707Z",
+    "engagement_uuid" : "uuid1",
+    "name" : "pat",
+    "region" : "na"
+  }, {
+    "uuid" : "56083bc0-e064-4a00-9da9-26defb21d0d0",
+    "created" : "2021-08-20T04:11:16.707Z",
+    "engagement_uuid" : "uuid1",
+    "name" : "rat",
+    "region" : "na"
+  }, {
+    "uuid" : "a0042bc4-f178-4cbd-8242-bbfdb999b21e",
+    "created" : "2021-08-20T04:11:16.707Z",
+    "engagement_uuid" : "uuid1",
+    "name" : "bat",
+    "region" : "na"
+  }, {
+    "uuid" : "2edb3ff3-7a66-4b3c-870a-31096596e7f6",
+    "created" : "2021-08-20T04:11:16.707Z",
+    "engagement_uuid" : "uuid1",
+    "name" : "cat",
+    "region" : "na"
+  }, {
+    "uuid" : "8b6ce29c-bc21-4294-ac0d-89b36b4e8d4d",
+    "created" : "2021-08-20T04:11:16.707Z",
+    "engagement_uuid" : "uuid1",
+    "name" : "fat",
+    "region" : "na"
+  }, {
+    "uuid" : "92c524cb-3f3d-4767-a7ac-45105d987a84",
+    "created" : "2021-08-20T04:11:16.707Z",
+    "engagement_uuid" : "uuid1",
+    "name" : "philanthropy",
+    "region" : "na"
+  } ]
+
+}

@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "description": "engagement UUID: d4c228ec-9dcc-435f-bcc1-60ebcec269f3",
+    "name": "iac",
+    "name_with_namespace": "engagements / sandbox / Funkenstein / World Tour / iac",
+    "path": "iac",
+    "path_with_namespace": "engagements/sandbox/funkenstein/world-tour/iac",
+    "default_branch": "master",
+    "namespace": {
+      "id": 100,
+      "name": "World Tour",
+      "path": "world-tour",
+      "kind": "group",
+      "full_path": "engagements/sandbox/funkenstein/world-tour",
+      "parent_id": 1000
+    }
+  },
+  {
+    "id": 2,
+    "name": "iac",
+    "name_with_namespace": "engagements / sandbox / Funkenstein / World Tour2 / iac",
+    "path": "iac",
+    "path_with_namespace": "engagements/sandbox/funkenstein/world-tour2/iac",
+    "default_branch": "master",
+    "namespace": {
+      "id": 100,
+      "name": "World Tour2",
+      "path": "world-tour2",
+      "kind": "group",
+      "full_path": "engagements/sandbox/funkenstein/world-tour2",
+      "parent_id": 1000
+    }
+  }
+]
