@@ -1,26 +1,19 @@
 package com.redhat.labs.lodestar.engagements.resource;
 
-import java.util.List;
-import java.util.Optional;
+import java.time.*;
+import java.util.*;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.validation.Valid;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import com.redhat.labs.lodestar.engagements.utils.PageFilter;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
@@ -31,19 +24,21 @@ import com.redhat.labs.lodestar.engagements.model.Engagement;
 import com.redhat.labs.lodestar.engagements.service.EngagementService;
 
 @RequestScoped
-@Path("/api/engagements")
+@Path("/api/v2/engagements")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Engagements")
 public class EngagementResource {
     private static final String TOTAL_HEADER = "x-total-engagements";
+    private static final String ACCESS_CONTROL_EXPOSE_HEADER = "Access-Control-Expose-Headers";
+    private static final String LAST_UPDATE_HEADER = "last-update";
 
     @Inject
     EngagementService engagementService;
     
     @GET
-    public Response getEngagements() {
-        List<Engagement> engagements = engagementService.getEngagements();
+    public Response getEngagements(@BeanParam PageFilter pagingFilter) {
+        List<Engagement> engagements = engagementService.getEngagements(pagingFilter);
         return Response.ok(engagements).header(TOTAL_HEADER, engagements.size()).build();
     }
     
@@ -104,6 +99,20 @@ public class EngagementResource {
         
         return Response.noContent().build();
     }
+
+    @PUT
+    @Path("{uuid}/launch")
+    public Response launch(@PathParam("uuid") String uuid, @QueryParam("author") String author, @QueryParam("authorEmail") String authorEmail) {
+        engagementService.launch(uuid, author, authorEmail);
+        return Response.ok(engagementService.getEngagement(uuid)).build();
+    }
+
+    @PUT
+    @Path("{uuid}/participants/{count}")
+    public Response updateParticipants(@PathParam("uuid") String uuid, @PathParam("count") int count) {
+        engagementService.updateCount(uuid, count, "participantCount");
+        return Response.ok().build();
+    }
     
     @PUT
     @Path("refresh")
@@ -114,13 +123,48 @@ public class EngagementResource {
     
     @GET
     @Path("suggest") 
-    public Response suggest(@QueryParam("partial") Optional<String> partial) {
-        String tryIt = "";
-        if(partial.isPresent()) {
-            tryIt = partial.get();
+    public Response suggestCustomer(@QueryParam("partial") String partial) {
+        if(partial == null) {
+            return Response.ok(Collections.emptySet()).build();
         }
         
-        return Response.ok().entity(engagementService.getCustomerSuggestions(tryIt)).build();
+        return Response.ok().entity(engagementService.getCustomerSuggestions(partial)).build();
+    }
+
+    @GET
+    @Path("customer/{customer}/engagement/{engagement}")
+    public Response getByCustomerAndEngagementName(@PathParam("customer") String customerName, @PathParam("engagement") String engagementName) {
+        Optional<Engagement> engagement = engagementService.getByCustomerAndEngagementName(customerName, engagementName);
+
+        if(engagement.isPresent()) {
+            return Response.ok(engagement.get()).build();
+        }
+
+        return Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    @GET
+    @Path("count")
+    public Response getCountByStatus(@QueryParam("time") String time) {
+
+        Instant compare = Instant.now();
+
+        if(time != null) {
+            compare = Instant.parse(time);
+        }
+
+        return Response.ok(engagementService.getEngagementCountByStatus(compare)).build();
+    }
+
+    @HEAD
+    public Response getLastUpdate(@PathParam("uuid") String uuid) {
+        Optional<Engagement> engagement = engagementService.getEngagement(uuid);
+        if(engagement.isPresent()) {
+            return Response.ok().header(LAST_UPDATE_HEADER, engagement.get().getLastUpdated())
+                .header(ACCESS_CONTROL_EXPOSE_HEADER, LAST_UPDATE_HEADER).build();
+        }
+
+        return Response.status(Response.Status.NOT_FOUND).build();
     }
 
 }

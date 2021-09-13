@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "url": "https://lodestar/status/hook",
+    "created_at": "2021-08-25T16:09:32.314Z",
+    "push_events": true,
+    "tag_push_events": false,
+    "merge_requests_events": false,
+    "repository_update_events": false,
+    "enable_ssl_verification": true,
+    "project_id": 11,
+    "issues_events": false,
+    "confidential_issues_events": false,
+    "note_events": false,
+    "confidential_note_events": null,
+    "pipeline_events": false,
+    "wiki_page_events": false,
+    "deployment_events": false,
+    "job_events": false,
+    "releases_events": false,
+    "push_events_branch_filter": null
+  }
+]

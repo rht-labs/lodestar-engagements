@@ -1,15 +1,12 @@
 package com.redhat.labs.lodestar.engagements.service;
 
 import java.time.Instant;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import com.redhat.labs.lodestar.engagements.utils.*;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
 import org.javers.core.diff.Diff;
@@ -33,6 +30,9 @@ public class CategoryService {
     
     @Inject
     CategoryRepository categoryRepository;
+
+    @Inject
+    EngagementService engagementService;
     
     static final Javers javers = JaversBuilder.javers().withListCompareAlgorithm(ListCompareAlgorithm.LEVENSHTEIN_DISTANCE).build();
     
@@ -48,6 +48,10 @@ public class CategoryService {
     public List<Category> getCategories(int page, int pageSize) {
         return categoryRepository.getCategories(page, pageSize);
     }
+
+    public Set<String> suggestCategory(String partial) {
+        return categoryRepository.getSuggestions(partial);
+    }
     
     public long count() {
         return categoryRepository.count();
@@ -57,19 +61,25 @@ public class CategoryService {
         return categoryRepository.countCategories(engagementUuid);
     }
     
-    public List<Counter> getCategoryCounts(Optional<String> region) {
-        return categoryRepository.getCategoryCounts(region);
+    public List<Counter> getCategoryCounts(List<String> regions, PageFilter paging) {
+        return categoryRepository.getCategoryCounts(regions, paging);
     }
     
     public void updateCategories(Engagement engagement, Set<String> categories) {
+        LOGGER.debug("updating categories {}", categories);
         
         Diff diff = javers.compareCollections(engagement.getCategories(), categories, String.class);
         engagement.setLastMessage(diff.prettyPrint());
 
-        engagement.setCategories(categories);
-        engagement.update();
+        if(!diff.hasChanges()) {
+            LOGGER.debug("Category update called without changes. Abort");
+            return;
+        }
 
-        Set<String> categoryCopy = new HashSet<>(categories);
+        engagement.setCategories(categories);
+        engagementService.update(engagement, false, true);
+
+        Set<String> categoryCopy = new TreeSet<>(categories);
 
         List<Category> current = categoryRepository.getCategories(engagement.getUuid());
 
@@ -90,8 +100,6 @@ public class CategoryService {
                     .uuid(UUID.randomUUID().toString()).created(now).build();
             categoryRepository.persist(cat); // Not in db. Add new
         });
-        
-        
 
         bus.publish(MERGE_CATEGORIES, engagement);
     }

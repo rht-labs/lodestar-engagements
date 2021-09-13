@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.gitlab4j.api.models.Group;
@@ -46,7 +45,6 @@ public class GitlabService {
      * @param engagement create this
      */
     @ConsumeEvent(value = EngagementService.CREATE_ENGAGEMENT, blocking = true)
-    @Transactional
     public void createEngagementInGitlab(Engagement engagement) {
         LOGGER.debug("E {}", engagement);
         
@@ -63,9 +61,12 @@ public class GitlabService {
         gitlabApiClient.createEngagementFiles(engagement);
         
         engagementService.update(engagement, false);
+
         
         gitlabApiClient.createWebhooks(engagement.getProjectId(), engagement.getState());
         gitlabApiClient.activateDeployKey(engagement.getProjectId());
+
+        LOGGER.debug("creation complete {}", engagement);
     }
     
     /**
@@ -76,7 +77,6 @@ public class GitlabService {
      * @param engagement update this
      */
     @ConsumeEvent(value = EngagementService.UPDATE_ENGAGEMENT, blocking = true)
-    @Transactional
     public void updateEngagementInGitlab(Engagement engagement) {
         LOGGER.debug("Gitlabbing engagement update - {}", engagement);
 
@@ -92,17 +92,18 @@ public class GitlabService {
                 engagement.getName());
         
         if(!engagementPath.equals(gitlabPath)) {
+            LOGGER.debug("old path {} new path {}", gitlabPath, engagementPath);
             changeName(existing, engagement);
         } else {
             LOGGER.debug("path did not change");
         }
         
         gitlabApiClient.updateEngagementFile(engagement);
+        engagementService.update(engagement, false);
 
     }
     
     @ConsumeEvent(value = EngagementService.DELETE_ENGAGEMENT, blocking = true)
-    @Transactional
     public void deleteEngagementInGitlab(Engagement engagement) {
         Optional<Group> engagementGroupOption = gitlabApiClient.getGroup(engagement);
         
@@ -168,7 +169,7 @@ public class GitlabService {
      *   if subgroups
      *     check for existing group
      *       if it doesn't exist - create new customer group
-     *     update eng group parent to customer
+     *     update engagement group parent to customer
      *   
      * 
      * @param existing existing project
@@ -207,30 +208,33 @@ public class GitlabService {
                  
                 gitlabApiClient.updateGroup(customerCurrentGroup);
             } else { // A new group is needed here and at the project level since there are multiple engagements for this customer.
-                
-                Group newCustomerGroup;
-                if(customerNewGroupOption.isEmpty()) { 
-                    newCustomerGroup = gitlabApiClient.createGroup(engagement.getCustomerName());
-                } else { //Group already exists no need to create
-                    newCustomerGroup = customerNewGroupOption.get();
-                }
-                
-                Group newEngagementGroup = gitlabApiClient.createGroup(currentPath, newCustomerGroup.getId());
-                existing = gitlabApiClient.transferProject(existing.getId(), newEngagementGroup.getId());
-                
-                gitlabApiClient.deleteGroup(engagementCurrentGroup.getId());
-                
-                if(customerSubGroups.size() == 1) { //We needed a new customer group but there was one already, so we couldn't just update the name / path
-                    gitlabApiClient.deleteGroup(customerCurrentGroup.getId());
-                }
+                createNewCustomerGroupOnChange(customerNewGroupOption, engagement.getCustomerName(), currentPath,
+                        existing.getId(), customerCurrentGroup.getId(), customerSubGroups.size());
             }
-            
         }
         
         if(engagementNameChanged) {
             gitlabApiClient.updateGroupName(engagement.getName(), existing.getNamespace().getId());
         }
+    }
 
+    private void createNewCustomerGroupOnChange(Optional<Group> customerNewGroupOption, String customerName, String currentPath, int existingProjectId,
+                                           int currentCustomerGroupId, int currentSubGroupSize) {
+        Group newCustomerGroup;
+        if(customerNewGroupOption.isEmpty()) {
+            newCustomerGroup = gitlabApiClient.createGroup(customerName);
+        } else { //Group already exists no need to create
+            newCustomerGroup = customerNewGroupOption.get();
+        }
+
+        Group newEngagementGroup = gitlabApiClient.createGroup(currentPath, newCustomerGroup.getId());
+        gitlabApiClient.transferProject(existingProjectId, newEngagementGroup.getId());
+
+        gitlabApiClient.deleteGroup(currentCustomerGroupId);
+
+        if(currentSubGroupSize == 1) { //We needed a new customer group but there was one already, so we couldn't just update the name / path
+            gitlabApiClient.deleteGroup(currentCustomerGroupId);
+        }
     }
     
         

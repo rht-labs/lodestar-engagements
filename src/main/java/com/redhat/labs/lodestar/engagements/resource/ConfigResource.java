@@ -12,7 +12,7 @@ import javax.ws.rs.core.Response;
 import java.util.List;
 
 @RequestScoped
-@Path("/api/engagements/gitlab-webhooks")
+@Path("/api/v2/engagements/gitlab-webhooks")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Webhooks")

@@ -1,0 +1,26 @@
+[
+  {
+    "base_url": "https://lodestar1",
+    "enabled_after_archive": true,
+    "name": "webhook1",
+    "push_event": true,
+    "push_events_branch_filter": "main",
+    "token": "c"
+  },
+  {
+    "base_url": "https://lodestar2",
+    "enabled_after_archive": false,
+    "name": "webhook2",
+    "push_event": true,
+    "push_events_branch_filter": "main",
+    "token": "b"
+  },
+  {
+    "base_url": "https://lodestar3",
+    "enabled_after_archive": false,
+    "name": "webhook3",
+    "push_event": true,
+    "push_events_branch_filter": "main",
+    "token": "a"
+  }
+]

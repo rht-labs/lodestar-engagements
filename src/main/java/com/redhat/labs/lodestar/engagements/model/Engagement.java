@@ -1,15 +1,14 @@
 package com.redhat.labs.lodestar.engagements.model;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
+import javax.json.bind.annotation.JsonbTransient;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import javax.ws.rs.WebApplicationException;
 
+import org.bson.types.ObjectId;
 import org.javers.core.metamodel.annotation.TypeName;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -28,12 +27,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @TypeName("Engagement")
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode
 @JsonIgnoreProperties(value = { "id" })
 @JsonPropertyOrder(alphabetic = true)
-public class Engagement extends PanacheMongoEntity {
+public class Engagement {
 
+    @JsonbTransient
+    private ObjectId id;
     private String uuid;
+    @NotBlank
     private String type;
     @ValidName
     @Size(min = 3, max = 255)
@@ -48,7 +50,7 @@ public class Engagement extends PanacheMongoEntity {
     private Launch launch;
     
     @Builder.Default
-    private Set<String> categories = new HashSet<>();
+    private Set<String> categories = new TreeSet<>();
     
     @Builder.Default
     private List<UseCase> useCases = new ArrayList<>();
@@ -75,6 +77,13 @@ public class Engagement extends PanacheMongoEntity {
     private Instant endDate;
     private Instant createdDate;
     private Instant lastUpdated;
+
+    @Builder.Default
+    private Integer participantCount = 0;
+    @Builder.Default
+    private Integer hostingCount = 0;
+    @Builder.Default
+    private Integer artifactCount = 0;
     
     //status
     //scores
@@ -107,16 +116,26 @@ public class Engagement extends PanacheMongoEntity {
      * For values set a creation - always override update
      * For values set after creation (ex. Launch). Override after first setting
      * @param stone Values set in stone
+     * @return boolean if an initial field was updated
      */
-    public void overrideImmutableFields(Engagement stone) {
+    public boolean overrideImmutableFields(Engagement stone, boolean categoryUpdate) {
+        boolean allowOverride = false;
         
-        super.id = stone.id;
+        id = stone.id;
         uuid = stone.getUuid();
         createdDate = stone.getCreatedDate();
         creationDetails = stone.getCreationDetails();
-        categories = stone.getCategories();
+        participantCount = stone.getParticipantCount();
+        artifactCount = stone.getArtifactCount();
+        hostingCount = stone.getHostingCount();
+
+        if(!categoryUpdate) {
+            categories = stone.getCategories();
+        }
         
-        if(stone.getProjectId() != 0) {
+        if(stone.getProjectId() == 0) {
+            allowOverride = true;
+        } else {
             projectId = stone.getProjectId();
         }
         
@@ -124,9 +143,7 @@ public class Engagement extends PanacheMongoEntity {
             launch = stone.getLaunch();
         }
 
-        // status
-        //engagement.setStatus(existing.getStatus())
-
+        return allowOverride;
     }
 
     public EngagementState getState() {

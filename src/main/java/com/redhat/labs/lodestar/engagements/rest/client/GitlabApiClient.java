@@ -11,6 +11,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import com.redhat.labs.lodestar.engagements.model.EngagementState;
+import com.redhat.labs.lodestar.engagements.service.*;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
@@ -35,16 +36,14 @@ import com.redhat.labs.lodestar.engagements.exception.EngagementGitlabException;
 import com.redhat.labs.lodestar.engagements.model.Category;
 import com.redhat.labs.lodestar.engagements.model.Engagement;
 import com.redhat.labs.lodestar.engagements.model.HookConfig;
-import com.redhat.labs.lodestar.engagements.service.CategoryService;
-import com.redhat.labs.lodestar.engagements.service.ConfigService;
 
 @ApplicationScoped
 public class GitlabApiClient {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitlabApiClient.class);
     private static final String ENGAGEMENT_DESCRIPTION = "engagement UUID: %s";
     private static final String PROJECT_NAME = "iac";
-    private static final String LAUNCHED_MESSAGE = "Engagement Launched \n ";
-    private static final String SUMMARY_MESSAGE = "Engagement Summary Updated \n";
+    private static final String LAUNCHED_MESSAGE = "Launch Ahoy!";
+    private static final String SUMMARY_MESSAGE = "Summary Update";
     
     @ConfigProperty(name = "file.engagement")
     String engagementFile;
@@ -205,6 +204,9 @@ public class GitlabApiClient {
             try {
                 file = gitlabApi.getRepositoryFileApi().getFile(e.getProjectId(), categoryFile, branch);
                 List<Category> categories = json.fromJson(file.getDecodedContentAsString(), Category.class);
+                if(categories == null) {
+                    LOGGER.error("Category null " + e.getUuid());
+                }
                 categoryService.refresh(categories);
                 categoryCount += categories.size();
             } catch (GitLabApiException ex) {
@@ -235,7 +237,8 @@ public class GitlabApiClient {
      * @return the group
      */
     public Group createGroup(String name, int parentId) {
-        
+
+        LOGGER.debug("create {} - {}", name, parentId);
         String groupPath = generateValidPath(name);
         
         LOGGER.debug("Creating group {} ({}), parent {}", name, groupPath, parentId);
@@ -249,6 +252,7 @@ public class GitlabApiClient {
         try {
             return gitlabApi.getGroupApi().createGroup(params);
         } catch (GitLabApiException e) {
+            LOGGER.error("",e);
             throw new EngagementGitlabException(e.getHttpStatus(), e.getReason()); 
         }
     }
@@ -396,18 +400,21 @@ public class GitlabApiClient {
     }
     
     public void updateEngagementFile(Engagement engagement) {
+        //Transient values set to null
+        engagement.setParticipantCount(null);
+        engagement.setHostingCount(null);
+        engagement.setArtifactCount(null);
         String engagementContent = json.toJson(engagement);
         
-        String messagePrefix = engagement.getLastMessage().contains("launch.launchedBy") ? LAUNCHED_MESSAGE : SUMMARY_MESSAGE;
-        String message = String.format("%s %n %s %n %s %s", messagePrefix, engagement.getLastMessage(), getEmoji(), getEmoji());
+        String messagePrefix = engagement.getLastMessage().contains(EngagementService.LAUNCH_MESSAGE) ? LAUNCHED_MESSAGE : SUMMARY_MESSAGE;
+        String message = String.format("%s %s %s %n %s", messagePrefix, getEmoji(), getEmoji(), engagement.getLastMessage());
 
         CommitAction action = new CommitAction()
                 .withAction(Action.UPDATE)
                 .withFilePath(engagementFile)
                 .withContent(engagementContent);
-        
         commitUpdate(engagement.getProjectId(), message, Collections.singletonList(action), engagement.getLastUpdateName(), engagement.getLastUpdateByEmail());
-        
+        engagement.setLastMessage(message);
     }
     
     private void commitUpdate(int projectId, String message, List<CommitAction> actions, String authorName, String authorEmail) {

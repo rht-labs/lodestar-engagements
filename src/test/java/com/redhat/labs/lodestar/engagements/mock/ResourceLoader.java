@@ -10,7 +10,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public final class ResourceLoader {
-    public static JsonMarshaller json = new JsonMarshaller();
+    private static JsonMarshaller json = new JsonMarshaller();
     
     public static String load(String resourceName) {
         try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName)) {

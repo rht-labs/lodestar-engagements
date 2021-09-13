@@ -35,7 +35,7 @@ import com.redhat.labs.lodestar.engagements.service.CategoryService;
 import com.redhat.labs.lodestar.engagements.service.EngagementService;
 
 @RequestScoped
-@Path("/api/categories")
+@Path("/api/v2/categories")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Category")
@@ -51,9 +51,7 @@ public class CategoryResource {
     public Response getCategories(@QueryParam("engagementUuid") Optional<String> engagementUuidOption, @BeanParam PageFilter pageFilter) {
         List<Category> categories;
         long count ;
-        
-        System.out.println("xxx -> " + engagementUuidOption);
-        System.out.println("pf -> " + pageFilter);
+
         if(engagementUuidOption.isPresent()) {
             categories = categoryService.getCategories(engagementUuidOption.get());
             count = categoryService.countForEngagementUuid(engagementUuidOption.get());
@@ -63,11 +61,18 @@ public class CategoryResource {
         }
         return Response.ok(categories).header("x-total-categories", count).build();
     }
+
+    @GET
+    @Path("suggest")
+    @Operation(summary = "Suggest categories based on input.")
+    public Set<String> getCategorySuggestions(@DefaultValue("") @QueryParam("partial") String partial) {
+        return categoryService.suggestCategory(partial);
+    }
     
     @GET
     @Path("rollup")
-    public Response getCategoryRollup(@QueryParam("region") Optional<String> region) {
-        List<Counter> categoryCounts = categoryService.getCategoryCounts(region);
+    public Response getCategoryRollup(@QueryParam("region") List<String> regions, @BeanParam PageFilter pageFilter) {
+        List<Counter> categoryCounts = categoryService.getCategoryCounts(regions, pageFilter);
         return Response.ok(categoryCounts).build();
     }
     

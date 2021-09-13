@@ -22,7 +22,7 @@ import com.redhat.labs.lodestar.engagements.model.UseCase;
 import com.redhat.labs.lodestar.engagements.service.EngagementService;
 
 @RequestScoped
-@Path("/api/usecases")
+@Path("/api/v2/usecases")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Use Cases")
@@ -38,7 +38,7 @@ public class UseCaseResource {
     }
     
     @GET
-    @Path("usecases/{uuid}")
+    @Path("{uuid}")
     public Response getUseCase(@PathParam("uuid") String uuid) {
         Optional<UseCase> useCase = engagementService.getUseCase(uuid);
         

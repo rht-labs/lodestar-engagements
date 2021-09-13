@@ -1,15 +1,24 @@
 package com.redhat.labs.lodestar.engagements.mock;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.github.tomakehurst.wiremock.WireMockServer;
-
+import com.github.tomakehurst.wiremock.client.MappingBuilder;
+import com.redhat.labs.lodestar.engagements.utils.JsonMarshaller;
 import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
+import org.gitlab4j.api.models.Commit;
+import org.gitlab4j.api.models.Group;
+import org.gitlab4j.api.models.Namespace;
+import org.gitlab4j.api.models.Project;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 public class ExternalApiWireMock implements QuarkusTestResourceLifecycleManager {
+
+    JsonMarshaller json = new JsonMarshaller();
 
     private WireMockServer wireMockServer; 
     @Override
@@ -23,8 +32,25 @@ public class ExternalApiWireMock implements QuarkusTestResourceLifecycleManager 
                 .withHeader("Content-Type",  "application/json")
                 .withBody(body)
         ));
+
+        body = json.toJson(new Commit().withMessage("ExternalApiWireMock"));
         
-        stubFor(post(urlEqualTo("/api/v4/projects/1/repository/commits")).willReturn(aResponse()
+        stubFor(post(urlMatching("/api/v4/projects/[0-9][0-9]/repository/commits")).willReturn(aResponse()
+                .withHeader("Content-Type",  "application/json")
+                .withBody(body)
+        ));
+
+        stubFor(post(urlMatching("/api/v4/projects/[0-9][0-9]/hooks")).willReturn(aResponse()
+                .withHeader("Content-Type",  "application/json")
+                .withBody(body)
+        ));
+
+        stubFor(post(urlMatching("/api/v4/projects/[0-9][0-9]/deploy_keys/3678/enable")).willReturn(aResponse()
+                .withHeader("Content-Type",  "application/json")
+                .withBody(body)
+        ));
+
+        stubFor(put(urlMatching("/api/v4/projects/[0-9][0-9]/deploy_keys/3678")).willReturn(aResponse()
                 .withHeader("Content-Type",  "application/json")
                 .withBody(body)
         ));
@@ -97,7 +123,36 @@ public class ExternalApiWireMock implements QuarkusTestResourceLifecycleManager 
                 .withBody("{\"msg\": \" 500 Something bad happened\"}")
                 ));
 
+        body = ResourceLoader.load("webhooks.json");
+
+        stubFor(get(urlEqualTo("/api/v1/configs/webhooks")).willReturn(aResponse()
+                .withHeader("Content-Type",  "application/json").withStatus(200).withBody(body)));
+
+        //create engagement
+        stubFor(this.createGroup("customer-ten", 3, 10));
+        stubFor(this.createGroup("engagement-ten", 10, 11));
+        stubFor(this.createProject("engagement-ten", 11));
+
+        //update engagement
+        stubFor(this.getProject("engagement-twelve", 12, 13));
+        stubFor(this.getGroup("engagement-twelve", 14, 13));
+        stubFor(this.getGroup("customer-twelve", 3, 14));
+        stubFor(getSubGroups(1,14, 13));
+
+        //update engagement transfer
+        stubFor(this.getProject("engagement-fifteen", 15, 16));
+        stubFor(this.getGroup("engagement-fifteen", 17, 16));
+        stubFor(this.getGroup("customer-fifteen", 3, 17));
+        stubFor(getSubGroups(2,17, 16));
+        stubFor(this.createGroup("customer-fifteen", 2, 18));
+
+        stubFor(put(urlMatching("/api/v4/groups/[0-9][0-9]")).willReturn(aResponse()
+                .withHeader("Content-Type",  "application/json").withStatus(200)
+                .withBody("{}")
+        ));
+
         Map<String, String> config = new HashMap<>();
+        config.put("config.api/mp-rest/url", wireMockServer.baseUrl());
         config.put("gitlab4j.api.url", wireMockServer.baseUrl());
         
         return config;
@@ -108,9 +163,71 @@ public class ExternalApiWireMock implements QuarkusTestResourceLifecycleManager 
         if(null != wireMockServer) {
            wireMockServer.stop();
         }
-        
     }
 
+    private MappingBuilder createGroup(String groupName, int parentId, int groupId) {
 
+        Group g = instantGroup(groupName, parentId, groupId);
+        String group = new JsonMarshaller().toJson(g);
+
+        return post(urlEqualTo("/api/v4/groups")).withRequestBody(containing(groupName)).willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type",  "application/json").withBody(group));
+    }
+
+    private MappingBuilder getGroup(String groupName, int parentId, int groupId) {
+
+        Group g = instantGroup(groupName, parentId, groupId);
+        String group = new JsonMarshaller().toJson(g);
+
+        return get(urlEqualTo("/api/v4/groups/" + groupId)).willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type",  "application/json").withBody(group));
+    }
+
+    private MappingBuilder getSubGroups(int subGroupCount, int parentId, int groupId) {
+        List<Group> groups = new ArrayList<>();
+
+        for(int i=0; i<subGroupCount; i++) {
+            groups.add(instantGroup("blah", parentId, groupId));
+        }
+
+        String response = json.toJson(groups);
+
+        return get(urlEqualTo("/api/v4/groups/" + parentId + "/subgroups?per_page=96&page=1")).willReturn(aResponse()
+                .withHeader("Content-Type",  "application/json").withStatus(200)
+                .withBody(response));
+    }
+
+    private Group instantGroup(String groupName, int parentId, int groupId) {
+        Group g = new Group().withName(groupName)
+                .withParentId(parentId)
+                .withPath(groupName)
+                .withFullName("John / engagements / " + groupName)
+                .withFullPath("john/engagements/" + groupName).withId(groupId);
+        return g;
+    }
+
+    private MappingBuilder createProject(String groupName, int projectId) {
+
+        Project p = new Project().withId(projectId)
+                .withName("iac").withDescription("engagement UUID: " + projectId + "-" + groupName);
+
+        String project = json.toJson(p);
+
+        return post(urlEqualTo("/api/v4/projects")).withRequestBody(containing(groupName)).willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type",  "application/json").withBody(project));
+    }
+
+    private MappingBuilder getProject(String groupName, int projectId, int groupId) {
+        Namespace ns = new Namespace().withPath(groupName).withId(groupId);
+
+        Project p = new Project().withId(projectId)
+                .withName("iac").withDescription("engagement UUID: " + projectId + "-" + groupName)
+                .withNamespace(ns);
+
+        String project = json.toJson(p);
+
+        return get(urlEqualTo("/api/v4/projects/" + projectId)).willReturn(aResponse().withStatus(200)
+                .withHeader("Content-Type",  "application/json").withBody(project));
+    }
 
 }

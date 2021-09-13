@@ -17,6 +17,7 @@ import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 
+import io.quarkus.panache.common.Sort;
 import org.bson.conversions.Bson;
 
 import com.mongodb.client.model.Field;
@@ -30,8 +31,9 @@ import io.quarkus.mongodb.panache.PanacheMongoRepository;
 @ApplicationScoped
 public class EngagementRepository implements PanacheMongoRepository<Engagement> {
 
-    public List<Engagement> getEngagements() {
-        return listAll();
+    public List<Engagement> getEngagements(PageFilter pageFilter) {
+        return findAll(Sort.by("last_updated", Sort.Direction.Descending))
+                .page(pageFilter.getPage(), pageFilter.getPageSize()).list();
     }
     
     /**
@@ -52,8 +54,9 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
         bson.add(unwind(Columns.USE_CASES.getName()));
         bson.add(replaceRoot(Columns.USE_CASES.getName()));
         bson.add(sort(descending("updated", "uuid")));
-        bson.add(paging.getLimit());
         bson.add(paging.getOffSet());
+        bson.add(paging.getLimit());
+
         
         return mongoCollection().aggregate(bson, UseCase.class).into(new ArrayList<>());
     }
@@ -81,7 +84,10 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
     public Optional<Engagement> getEngagement(String uuid) {
         return find("uuid", uuid).singleResultOptional();
     }
-    
+
+    public Optional<Engagement> getByCustomerAndEngagementName(String customerName, String engagementName) {
+        return find("customerName = ?1 and name = ?2", customerName, engagementName).singleResultOptional();
+    }
     /**
      * Applies - distinct, like, sort
      * @param input match the input
@@ -131,6 +137,10 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
 
     public Optional<Engagement> getByCustomerNameAndEngagementName(String customerName, String engagementName) {
         return find("name = ?1 and customerName = ?2", engagementName, customerName).firstResultOptional();
+    }
+
+    public void updateCount(String uuid, int count, String column) {
+        update(column, count).where("uuid", uuid);
     }
     
     public enum Columns {
