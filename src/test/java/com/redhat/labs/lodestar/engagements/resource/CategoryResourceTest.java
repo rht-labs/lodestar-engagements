@@ -57,6 +57,13 @@ class CategoryResourceTest {
     }
 
     @Test
+    void testSuggest() {
+        given().queryParam("partial", "at").when().get("suggest").then().statusCode(200).body("size()", equalTo(6));
+
+        given().queryParam("partial", "phil").when().get("suggest").then().statusCode(200).body("size()", equalTo(1));
+    }
+
+    @Test
     void testUpdateCategories() {
         List<String> categories = Arrays.asList("one", "two", "three", "rat");
         given().contentType(ContentType.JSON).pathParam("engagementUuid", "uuid1").when().body(categories).post("{engagementUuid}").then()

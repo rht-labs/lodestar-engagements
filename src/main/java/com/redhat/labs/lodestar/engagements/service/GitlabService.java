@@ -1,7 +1,9 @@
 package com.redhat.labs.lodestar.engagements.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -152,7 +154,11 @@ public class GitlabService {
     }
     
     public List<Engagement> getEngagements() {
-        return gitlabApiClient.getEngagements();
+        return getEngagements(Collections.emptySet());
+    }
+
+    public List<Engagement> getEngagements(Set<String> uuids) {
+        return gitlabApiClient.getEngagements(uuids);
     }
 
     private void updateWebhook(Engagement engagement) {

@@ -81,6 +81,10 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
         return find("categories = ?1", category).list();
     }
 
+    public List<Engagement> getEngagements(Set<String> uuids) {
+        return list("uuid in ?1", uuids);
+    }
+
     public Optional<Engagement> getEngagement(String uuid) {
         return find("uuid", uuid).singleResultOptional();
     }
@@ -97,10 +101,6 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
         String customer = "customerName";
         
         return mongoCollection().distinct(customer, regex(customer, input), String.class).into(new TreeSet<>());
-    }
-    
-    public List<Engagement> getEngagementsForRegex(String input) {
-        return list("customerName like ?1", input);
     }
 
     /**

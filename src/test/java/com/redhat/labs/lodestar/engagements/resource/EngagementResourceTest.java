@@ -3,11 +3,16 @@ package com.redhat.labs.lodestar.engagements.resource;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.verify;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response.Status;
 
 import com.redhat.labs.lodestar.engagements.model.UseCase;
+import com.redhat.labs.lodestar.engagements.service.GitlabService;
+import io.quarkus.test.junit.mockito.InjectSpy;
+import io.vertx.mutiny.core.eventbus.EventBus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,16 +26,24 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import org.mockito.Mockito;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @QuarkusTest
 @TestHTTPEndpoint(EngagementResource.class)
 @QuarkusTestResource(ExternalApiWireMock.class)
 class EngagementResourceTest {
+    private static final String AUTHOR = "Mitch";
+    private static final String AUTHOR_EMAIL = "mitch@bucannon.com";
 
     @Inject
     EngagementService engagementService;
+
+    @InjectSpy
+    GitlabService gitlabService;
 
     @BeforeEach
     void setUp() {
@@ -41,6 +54,26 @@ class EngagementResourceTest {
     void testRefresh() {
         given().when().put("refresh").then().statusCode(Status.OK.getStatusCode());
         assertEquals(2, engagementService.countAll());
+    }
+
+    @Test
+    void testRefreshByUuid() {
+        String uuid = "uuid1";
+        Instant now = Instant.now();
+        Engagement engagement = engagementService.getEngagement(uuid).orElseThrow();
+
+        engagement.setLaunch(Launch.builder().launchedBy(AUTHOR).launchedByEmail(AUTHOR_EMAIL).launchedDateTime(now).build());
+        engagementService.update(engagement, false, false);
+
+        engagement = engagementService.getEngagement(uuid).orElseThrow();
+
+        assertNotNull(engagement.getLaunch());
+
+        given().queryParam("uuids", "uuid1").when().put("refresh")
+                .then().statusCode(Status.OK.getStatusCode());
+        assertEquals(2, engagementService.countAll());
+
+        assertNotNull(engagement.getLaunch());
     }
 
     @Test
@@ -60,6 +93,78 @@ class EngagementResourceTest {
     void testGetEngagementByUuidNotFound() {
         String uuid = "uuid1111";
         given().pathParam("uuid", uuid).when().get("{uuid}").then().statusCode(404).body("message", equalTo("No engagement found for uuid uuid1111"));
+    }
+
+    @Test
+    void testGetEngagementByCustomerAndNameNotFound() {
+        String customer = "nope";
+        String name = "nada";
+
+        given().pathParam("customer", customer).pathParam("engagement", name)
+                .when().get("customer/{customer}/engagement/{engagement}")
+                .then().statusCode(404);
+    }
+
+    @Test
+    void testGetEngagementByCustomerAndNameSuccess() {
+        String customer = "Banana Hut";
+        String name = "banana";
+
+        given().pathParam("customer", customer).pathParam("engagement", name)
+                .when().get("customer/{customer}/engagement/{engagement}")
+                .then().statusCode(200).body("name", equalTo(name)).body("customer_name", equalTo(customer));
+    }
+
+    @Test
+    void testGetEngagementCountByStatus() {
+        Instant startDate = Instant.now().minus(30, ChronoUnit.DAYS);
+        Instant endDate = Instant.now().plus(30, ChronoUnit.DAYS);
+        Instant archiveDate = Instant.now().plus(60, ChronoUnit.DAYS);
+        Launch launch = Launch.builder().launchedDateTime(startDate).launchedByEmail(AUTHOR_EMAIL).launchedBy(AUTHOR).build();
+
+        Engagement engagement = Engagement.builder().name("DO500").customerName("Fish Gym").region("na").type("Residency")
+                .startDate(startDate).endDate(endDate).launch(launch).archiveDate(archiveDate).build();
+        engagementService.create(engagement);
+
+        endDate = Instant.now().minus(2, ChronoUnit.DAYS);
+        engagement = Engagement.builder().name("DO501").customerName("Fish Gym").region("na").type("Residency")
+                .startDate(startDate).endDate(endDate).archiveDate(archiveDate).launch(launch).build();
+        engagementService.create(engagement);
+
+        archiveDate = Instant.now().minus(1, ChronoUnit.DAYS);
+        engagement = Engagement.builder().name("DO502").customerName("Fish Gym").region("na").type("Residency")
+                .startDate(startDate).endDate(endDate).archiveDate(archiveDate).launch(launch).build();
+        engagementService.create(engagement);
+
+        engagement = Engagement.builder().name("DO503").customerName("Fish Gym").region("na").type("Residency")
+                .startDate(startDate).endDate(endDate).launch(launch).build();
+        engagementService.create(engagement);
+
+        given().when().get("count").then().statusCode(200)
+                .body("UPCOMING", equalTo(2))
+                .body("TERMINATING", equalTo(1))
+                .body("ACTIVE", equalTo(1))
+                .body("ANY", equalTo(6))
+                .body("PAST", equalTo(2));
+
+        given().queryParam("time", Instant.EPOCH.toString()).when().get("count").then().statusCode(200)
+                .body("UPCOMING", equalTo(2))
+                .body("ACTIVE", equalTo(4))
+                .body("ANY", equalTo(6));
+
+    }
+
+    @Test
+    void testHeadLastUpdate() {
+        String uuid = "uuid1";
+        given().pathParam("uuid", uuid).when().head("{uuid}").then().statusCode(200)
+                .header("last-update", notNullValue());
+    }
+
+    @Test
+    void testHeadLastUpdateNotFound() {
+        String uuid = "nope";
+        given().pathParam("uuid", uuid).when().head("{uuid}").then().statusCode(404);
     }
 
     @Test
@@ -87,21 +192,28 @@ class EngagementResourceTest {
 
     @Test
     void testCreateEngagement() {
-        Engagement engagement = Engagement.builder().name("DO500").customerName("Fish Gym").region("na").build();
+        Engagement engagement = Engagement.builder().name("DO500").customerName("Fish Gym").region("na").type("Residency").build();
         String e = new JsonMarshaller().toJson(engagement);
         given().contentType(ContentType.JSON).when().body(e).post().then().statusCode(Status.CREATED.getStatusCode()).header("Location", notNullValue());
     }
 
     @Test
+    void testCreateEngagementNoType() {
+        Engagement engagement = Engagement.builder().name("DO500").customerName("Fish Gym").region("na").build();
+        String e = new JsonMarshaller().toJson(engagement);
+        given().contentType(ContentType.JSON).when().body(e).post().then().statusCode(Status.BAD_REQUEST.getStatusCode()).header("Location", nullValue());
+    }
+
+    @Test
     void testCreateEngagementBadRequest() {
-        Engagement engagement = Engagement.builder().customerName("").region("na").build();
+        Engagement engagement = Engagement.builder().customerName("").region("na").type("Residency").build();
         String e = new JsonMarshaller().toJson(engagement);
         given().contentType(ContentType.JSON).when().body(e).post().then().statusCode(Status.BAD_REQUEST.getStatusCode()).header("Location", nullValue());
     }
 
     @Test
     void testUpdateEngagement() {
-        Engagement engagement = Engagement.builder().name("DO500").customerName("Fish Gym").region("na").build();
+        Engagement engagement = Engagement.builder().name("DO500").customerName("Fish Gym").region("na").type("Residency").build();
         engagementService.create(engagement);
 
         engagement.setDescription("description");
@@ -153,6 +265,64 @@ class EngagementResourceTest {
     }
 
     @Test
+    void testUpdateParticipants() {
+        String uuid = "uuid1";
+
+        Engagement engagement = engagementService.getEngagement(uuid).orElseThrow();
+        assertEquals(0, engagement.getParticipantCount());
+
+        given().pathParam("uuid", uuid).pathParam("count", 99)
+                .when().put("{uuid}/participants/{count}").then().statusCode(200);
+
+        engagement = engagementService.getEngagement(uuid).orElseThrow();
+        assertEquals(99, engagement.getParticipantCount());
+    }
+
+    @Test
+    void testLaunchNoEngagement() {
+        String uuid = "nope";
+
+        given().pathParam("uuid", uuid).queryParam("author", AUTHOR)
+                .queryParam("authorEmail", AUTHOR_EMAIL)
+                .contentType(ContentType.JSON)
+        .when()
+                .put("{uuid}/launch")
+        .then().statusCode(404);
+    }
+
+    @Test
+    void testLaunchAlreadyLaunched() {
+        String uuid = "uuid1";
+        Instant now = Instant.now();
+        Engagement engagement = engagementService.getEngagement(uuid).orElseThrow();
+
+        engagement.setLaunch(Launch.builder().launchedBy(AUTHOR).launchedByEmail(AUTHOR_EMAIL).launchedDateTime(now).build());
+        engagementService.update(engagement, false, false);
+
+        given().pathParam("uuid", uuid).queryParam("author", AUTHOR)
+                .queryParam("authorEmail", AUTHOR_EMAIL)
+                .contentType(ContentType.JSON)
+        .when()
+                .put("{uuid}/launch")
+        .then().statusCode(400);
+
+    }
+
+    @Test
+    void testLaunchAlreadySuccess() {
+        String uuid = "uuid1";
+
+        given().pathParam("uuid", uuid).queryParam("author", AUTHOR)
+                .queryParam("authorEmail", AUTHOR_EMAIL)
+                .contentType(ContentType.JSON)
+        .when()
+                .put("{uuid}/launch")
+        .then().statusCode(200);
+
+        verify(gitlabService, timeout(1000).times(1)) .updateEngagementInGitlab(Mockito.any(Engagement.class));
+    }
+
+    @Test
     void testCustomerSuggest() {
 
         Engagement engagement = Engagement.builder().name("DO500").customerName("Catfish Gym").region("na").build();
@@ -170,11 +340,12 @@ class EngagementResourceTest {
         given().queryParam("partial", "Catfish G").when().get("suggest").then().statusCode(200)
                 .body("size()", equalTo(1)).body("[0]", equalTo("Catfish Gym"));
 
-        given().when().get("suggest").then().statusCode(200).body("size()", equalTo(5)).body("[0]", equalTo("Banana Hut"));
+        given().when().get("suggest").then().statusCode(200).body("size()", equalTo(0));
     }
 
     @Test
     void testGetWithCategory() {
-        given().pathParam("category", "philanthropy").when().get("category/{category}").then().statusCode(200).body("size", equalTo(2)).header("x-total-engagements", equalTo("2"));
+        given().pathParam("category", "philanthropy").when().get("category/{category}")
+                .then().statusCode(200).body("size", equalTo(2)).header("x-total-engagements", equalTo("2"));
     }
 }

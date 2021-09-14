@@ -28,16 +28,17 @@ class UseCaseResourceTest {
 
     @Test
     void testGetUseCases() {
-        given().when().get().then().statusCode(200).header("x-total-use-cases", equalTo("2")).body("[0].title", equalTo("Panama2"));
+        given().when().get().then().statusCode(200).header("x-total-use-cases", equalTo("2"))
+                .body("[1].uuid", equalTo("use-case-1")).body("[0].title", equalTo("Panama2"));
     }
 
     @Test
     void testGetUseCaseById() {
-        given().pathParam("uuid", "use-case-1").when().get("usecases/{uuid}").then().statusCode(200).body("title", equalTo("Panama"));
+        given().pathParam("uuid", "use-case-1").when().get("{uuid}").then().statusCode(200).body("title", equalTo("Panama"));
     }
 
     @Test
     void testGetUseCaseByIdNotFound() {
-        given().pathParam("uuid", "use-case-xxx").when().get("usecases/{uuid}").then().statusCode(404);
+        given().pathParam("uuid", "use-case-xxx").when().get("{uuid}").then().statusCode(404);
     }
 }

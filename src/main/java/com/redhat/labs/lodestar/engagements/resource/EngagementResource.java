@@ -116,8 +116,15 @@ public class EngagementResource {
     
     @PUT
     @Path("refresh")
-    public Response refresh() {
-        long newCount = engagementService.refresh();
+    public Response refresh(@QueryParam("uuids") Set<String> uuids) {
+        long newCount;
+
+        if(uuids.isEmpty()) {
+            newCount = engagementService.refresh();
+        } else {
+            newCount = engagementService.refreshSelect(uuids);
+        }
+
         return Response.ok().header(TOTAL_HEADER, newCount).build();
     }
     
@@ -157,6 +164,7 @@ public class EngagementResource {
     }
 
     @HEAD
+    @Path("{uuid}")
     public Response getLastUpdate(@PathParam("uuid") String uuid) {
         Optional<Engagement> engagement = engagementService.getEngagement(uuid);
         if(engagement.isPresent()) {

@@ -3,11 +3,9 @@ package com.redhat.labs.lodestar.engagements.service;
 import com.redhat.labs.lodestar.engagements.mock.ExternalApiWireMock;
 import com.redhat.labs.lodestar.engagements.model.CreationDetails;
 import com.redhat.labs.lodestar.engagements.model.Engagement;
-import com.redhat.labs.lodestar.engagements.model.HookConfig;
 import com.redhat.labs.lodestar.engagements.repository.EngagementRepository;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
@@ -65,7 +63,7 @@ class GitlabServiceTest {
         Optional<Engagement> option = engagementRepository.getEngagement("engagement-twelve");
 
         assertTrue(option.isPresent());
-        assertTrue(engagement.getLastMessage().startsWith("Engagement Summary Updated"));
+        assertTrue(engagement.getLastMessage().startsWith("Summary Update"));
     }
 
     @Test
@@ -86,9 +84,6 @@ class GitlabServiceTest {
         Optional<Engagement> option = engagementRepository.getEngagement("engagement-fifteen");
 
         assertTrue(option.isPresent());
-
-        System.out.println(engagement.getLastMessage());
-
-        assertTrue(engagement.getLastMessage().startsWith("Engagement Summary Updated"));
+        assertTrue(engagement.getLastMessage().startsWith("Summary Update"));
     }
 }

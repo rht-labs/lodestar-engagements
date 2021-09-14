@@ -183,7 +183,7 @@ public class EngagementService {
     }
     
     public List<Engagement> getEngagements() {
-        return engagementRepository.getEngagements(new PageFilter());
+        return engagementRepository.getEngagements(PageFilter.builder().page(0).pageSize(1000).build());
     }
 
     public List<Engagement> getEngagements(PageFilter pageFilter) {
@@ -217,6 +217,22 @@ public class EngagementService {
     
     public Set<String> getCustomerSuggestions(String customer) {
         return engagementRepository.suggestCustomer(customer);
+    }
+
+    public long refreshSelect(Set<String> uuids) {
+        int count = 0;
+        LOGGER.debug("Refresh select ({})", uuids.size());
+        List<Engagement> engagements = gitlabService.getEngagements(uuids);
+        participantService.addEngagementCount(engagements);
+
+        for(Engagement e : engagements) {
+            engagementRepository.delete("uuid = ?1", e.getEngagementLeadEmail());
+            engagementRepository.persist(e);
+            count++;
+        }
+
+        bus.publish(CategoryService.REFRESH_CATEGORIES, CategoryService.REFRESH_CATEGORIES);
+        return count;
     }
     
     public long refresh() {

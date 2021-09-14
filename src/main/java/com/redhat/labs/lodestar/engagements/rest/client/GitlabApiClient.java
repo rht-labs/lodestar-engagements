@@ -1,10 +1,7 @@
 package com.redhat.labs.lodestar.engagements.rest.client;
 
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -172,28 +169,42 @@ public class GitlabApiClient {
             throw new EngagementGitlabException(e.getHttpStatus(), e.getReason(), "Engagement File Not Retrieved " + projectId);
         }
     }
-    
-    public List<Engagement> getEngagements() {
+
+    public List<Engagement> getEngagements(Set<String> uuids) {
         GroupProjectsFilter filter = new GroupProjectsFilter()
                 .withIncludeSubGroups(true);
         List<Engagement> allEngagements = new ArrayList<>();
-        
         try {
-            List<Project> allProjects = gitlabApi.getGroupApi().getProjects(engagementRepositoryId, filter);
-            
-            allProjects.forEach(p -> {
-                Optional<Engagement> e = getEngagement(p.getId());
 
-                e.ifPresent(allEngagements::add);
+            List<Project> allProjects = gitlabApi.getGroupApi().getProjects(engagementRepositoryId, filter);
+
+
+            allProjects.forEach(p -> {
+                if(uuids.isEmpty() || uuids.contains(getUuid(p))) {
+                    Optional<Engagement> e = getEngagement(p.getId());
+                    e.ifPresent(allEngagements::add);
+                }
             });
-            
-            
+
+
             LOGGER.debug("projects size {}", allProjects.size());
         } catch (GitLabApiException e) {
             throw new EngagementGitlabException(e.getHttpStatus(), e.getReason());
         }
-        
+
         return allEngagements;
+    }
+
+    private String getUuid(Project project) {
+        if(project.getDescription() == null) {
+            return "";
+        }
+        int chum = project.getDescription().lastIndexOf(" ") + 1;
+        if(chum < 1) {
+            return "";
+        }
+
+        return project.getDescription().substring(chum);
     }
     
     public long refreshCategories(List<Engagement> engagements) {
