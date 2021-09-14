@@ -82,6 +82,14 @@ class EngagementResourceTest {
     }
 
     @Test
+    void testGetPagedEngagements() {
+        int page = 0;
+        int pageSize = 1;
+        given().queryParam("page", page).queryParam("pageSize", pageSize)
+                .when().get().then().statusCode(200).header("x-total-engagements", equalTo("2")).body("size()", equalTo(1));
+    }
+
+    @Test
     void testGetEngagementByUuid() {
         String uuid = "uuid1";
         given().pathParam("uuid", uuid).when().get("{uuid}").then().statusCode(200).body("uuid", equalTo("uuid1")).body("name", equalTo("banana"))

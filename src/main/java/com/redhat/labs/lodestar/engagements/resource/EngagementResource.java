@@ -39,7 +39,7 @@ public class EngagementResource {
     @GET
     public Response getEngagements(@BeanParam PageFilter pagingFilter) {
         List<Engagement> engagements = engagementService.getEngagements(pagingFilter);
-        return Response.ok(engagements).header(TOTAL_HEADER, engagements.size()).build();
+        return Response.ok(engagements).header(TOTAL_HEADER, engagementService.countAll()).build();
     }
     
     @GET
