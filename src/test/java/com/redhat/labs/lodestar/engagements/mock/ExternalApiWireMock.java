@@ -158,9 +158,15 @@ public class ExternalApiWireMock implements QuarkusTestResourceLifecycleManager 
                 .withStatus(200)
                 .withBody(body)));
 
+        stubFor(get(urlEqualTo("/api/artifacts/engagements/count")).willReturn(aResponse()
+                .withHeader("Content-Type",  "application/json")
+                .withStatus(200)
+                .withBody(body)));
+
         Map<String, String> config = new HashMap<>();
         config.put("config.api/mp-rest/url", wireMockServer.baseUrl());
         config.put("participants.api/mp-rest/url", wireMockServer.baseUrl());
+        config.put("artifacts.api/mp-rest/url", wireMockServer.baseUrl());
         config.put("gitlab4j.api.url", wireMockServer.baseUrl());
         
         return config;

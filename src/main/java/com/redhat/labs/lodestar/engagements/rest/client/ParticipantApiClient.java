@@ -16,5 +16,5 @@ public interface ParticipantApiClient {
 
     @GET
     @Path("/engagements/counts")
-    Map<String, Integer> getParticipants();
+    Map<String, Integer> getParticipantCounts();
 }

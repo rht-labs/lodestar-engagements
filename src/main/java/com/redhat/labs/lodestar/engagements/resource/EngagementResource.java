@@ -113,6 +113,13 @@ public class EngagementResource {
         engagementService.updateCount(uuid, count, "participantCount");
         return Response.ok().build();
     }
+
+    @PUT
+    @Path("{uuid}/artifacts/{count}")
+    public Response updateArtifacts(@PathParam("uuid") String uuid, @PathParam("count") int count) {
+        engagementService.updateCount(uuid, count, "artifactCount");
+        return Response.ok().build();
+    }
     
     @PUT
     @Path("refresh")

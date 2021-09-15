@@ -46,6 +46,9 @@ public class EngagementService {
 
     @Inject
     ParticipantService participantService;
+
+    @Inject
+    ArtifactService artifactService;
     
     @Inject
     GitlabService gitlabService;
@@ -224,6 +227,7 @@ public class EngagementService {
         LOGGER.debug("Refresh select ({})", uuids.size());
         List<Engagement> engagements = gitlabService.getEngagements(uuids);
         participantService.addEngagementCount(engagements);
+        artifactService.addEngagementCount(engagements);
 
         for(Engagement e : engagements) {
             engagementRepository.delete("uuid = ?1", e.getEngagementLeadEmail());
@@ -239,6 +243,7 @@ public class EngagementService {
         LOGGER.debug("Refresh");
         List<Engagement> engagements = gitlabService.getEngagements();
         participantService.addEngagementCount(engagements);
+        artifactService.addEngagementCount(engagements);
         long purged = engagementRepository.purge();
         LOGGER.info("Purged {} engagements", purged);
         engagementRepository.persistAll(engagements);

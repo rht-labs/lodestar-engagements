@@ -287,6 +287,20 @@ class EngagementResourceTest {
     }
 
     @Test
+    void testUpdateArtifacts() {
+        String uuid = "uuid1";
+
+        Engagement engagement = engagementService.getEngagement(uuid).orElseThrow();
+        assertEquals(0, engagement.getParticipantCount());
+
+        given().pathParam("uuid", uuid).pathParam("count", 99)
+                .when().put("{uuid}/artifacts/{count}").then().statusCode(200);
+
+        engagement = engagementService.getEngagement(uuid).orElseThrow();
+        assertEquals(99, engagement.getArtifactCount());
+    }
+
+    @Test
     void testLaunchNoEngagement() {
         String uuid = "nope";
 

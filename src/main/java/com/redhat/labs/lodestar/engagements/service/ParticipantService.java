@@ -11,15 +11,13 @@ import java.util.*;
 
 @ApplicationScoped
 public class ParticipantService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(EngagementService.class);
-    private static final String TOTAL_PARTICIPANTS = "x-total-participants";
 
     @Inject
     @RestClient
     ParticipantApiClient participantApiClient;
 
     public void addEngagementCount(List<Engagement> engagements) {
-        Map<String, Integer> engagementCounts = participantApiClient.getParticipants();
+        Map<String, Integer> engagementCounts = participantApiClient.getParticipantCounts();
         engagements.forEach(e -> getCount(e, engagementCounts.get(e.getUuid())));
     }
 

@@ -1,5 +1,6 @@
 package com.redhat.labs.lodestar.engagements.rest.client;
 
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.*;
 
@@ -160,7 +161,8 @@ public class GitlabApiClient {
     public Optional<Engagement> getEngagement(Integer projectId) {
         try {
             RepositoryFile file = gitlabApi.getRepositoryFileApi().getFile(projectId, engagementFile, branch);
-            return Optional.of(json.fromJson(file.getDecodedContentAsString()));
+            String content = new String(file.getDecodedContentAsBytes(), StandardCharsets.UTF_8);
+            return Optional.of(json.fromJson(content));
         } catch (GitLabApiException e) {
             if(e.getHttpStatus() == 404) {
                 LOGGER.debug("Could find not file {} for project {}", engagementFile, projectId);
@@ -214,7 +216,8 @@ public class GitlabApiClient {
             RepositoryFile file;
             try {
                 file = gitlabApi.getRepositoryFileApi().getFile(e.getProjectId(), categoryFile, branch);
-                List<Category> categories = json.fromJson(file.getDecodedContentAsString(), Category.class);
+                String content = new String(file.getDecodedContentAsBytes(), StandardCharsets.UTF_8);
+                List<Category> categories = json.fromJson(content, Category.class);
                 if(categories == null) {
                     LOGGER.error("Category null " + e.getUuid());
                 }
