@@ -2,6 +2,7 @@ package com.redhat.labs.lodestar.engagements.service;
 
 import java.time.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -192,9 +193,21 @@ public class EngagementService {
     public List<Engagement> getEngagements(PageFilter pageFilter) {
         return engagementRepository.getEngagements(pageFilter);
     }
-    
+
+    public List<Engagement> getEngagements(PageFilter pageFilter, Set<String> regions) {
+        return engagementRepository.getEngagements(pageFilter, regions);
+    }
+
+    public List<Engagement> getEngagements(Set<EngagementState> states) {
+        return getEngagements().stream().filter(e -> states.contains(e.getState())).collect(Collectors.toList());
+    }
+
     public long countAll() {
         return engagementRepository.count();
+    }
+
+    public long countRegions(Set<String> regions) {
+        return engagementRepository.countEngagements(regions);
     }
     
     public List<Engagement> getEngagementsWithCategory(String category) {

@@ -13,6 +13,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
+import com.redhat.labs.lodestar.engagements.model.EngagementState;
 import com.redhat.labs.lodestar.engagements.utils.PageFilter;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
@@ -37,10 +38,25 @@ public class EngagementResource {
     EngagementService engagementService;
     
     @GET
-    public Response getEngagements(@BeanParam PageFilter pagingFilter) {
-        List<Engagement> engagements = engagementService.getEngagements(pagingFilter);
-        return Response.ok(engagements).header(TOTAL_HEADER, engagementService.countAll()).build();
+    public Response getEngagements(@BeanParam PageFilter pagingFilter, @QueryParam("region") Set<String> region) {
+        if(region.isEmpty()) { //no sorting yet
+            List<Engagement> engagements = engagementService.getEngagements(pagingFilter);
+            return Response.ok(engagements).header(TOTAL_HEADER, engagementService.countAll()).build();
+        }
+
+        List<Engagement> engagements = engagementService.getEngagements(pagingFilter, region);
+        return Response.ok(engagements).header(TOTAL_HEADER, engagementService.countRegions(region)).build();
     }
+    @GET
+    @Path("inStates")
+    public Response getEngagements(@QueryParam("inStates") Set<EngagementState> states) {
+        if(states.isEmpty()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity(new ErrorMessage("State list is empty")).build();
+        }
+        List<Engagement> engagements = engagementService.getEngagements(states);
+        return Response.ok(engagements).header(TOTAL_HEADER, engagements.size()).build();
+    }
+
     
     @GET
     @Path("category/{category}")

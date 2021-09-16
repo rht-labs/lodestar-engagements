@@ -35,6 +35,15 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
         return findAll(Sort.by("last_updated", Sort.Direction.Descending))
                 .page(pageFilter.getPage(), pageFilter.getPageSize()).list();
     }
+
+    public List<Engagement> getEngagements(PageFilter pageFilter, Set<String> regions) {
+        return find("region in ?1", pageFilter.getPanacheSort(), regions)
+                .page(pageFilter.getPage(), pageFilter.getPageSize()).list();
+    }
+
+    public long countEngagements(Set<String> regions) {
+        return count("region in ?1", regions);
+    }
     
     /**
      * match if uuid exists (basically is there a use case needed for add fields)

@@ -12,7 +12,6 @@ import javax.ws.rs.core.Response.Status;
 import com.redhat.labs.lodestar.engagements.model.UseCase;
 import com.redhat.labs.lodestar.engagements.service.GitlabService;
 import io.quarkus.test.junit.mockito.InjectSpy;
-import io.vertx.mutiny.core.eventbus.EventBus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -82,11 +81,41 @@ class EngagementResourceTest {
     }
 
     @Test
+    void testGetAllEngagementsForStateNoQueryParam() {
+        given().when().get("inStates").then().statusCode(400);
+    }
+
+    @Test
+    void testGetAllEngagementsForState() {
+
+        given().queryParam("inStates", "ACTIVE")
+                .when().get("inStates")
+                .then().statusCode(200).body("size()", equalTo(0));
+
+        given().queryParam("inStates", "UPCOMING")
+                .when().get("inStates")
+                .then().statusCode(200).body("size()", equalTo(2));
+    }
+
+    @Test
     void testGetPagedEngagements() {
         int page = 0;
         int pageSize = 1;
         given().queryParam("page", page).queryParam("pageSize", pageSize)
                 .when().get().then().statusCode(200).header("x-total-engagements", equalTo("2")).body("size()", equalTo(1));
+    }
+
+    @Test
+    void testGetPagedEngagementsForRegion() {
+        int page = 0;
+        int pageSize = 1;
+        given().queryParam("page", page).queryParam("pageSize", pageSize).queryParam("region", "na")
+                .queryParam("sort", "name|DESC")
+                .when().get().then().statusCode(200).header("x-total-engagements", equalTo("2")).body("size()", equalTo(1));
+
+        given().queryParam("page", page).queryParam("pageSize", pageSize).queryParam("region", "latam")
+                .queryParam("sort", "name")
+                .when().get().then().statusCode(200).header("x-total-engagements", equalTo("0")).body("size()", equalTo(0));
     }
 
     @Test

@@ -84,8 +84,7 @@ public class Engagement {
     private Integer hostingCount = 0;
     @Builder.Default
     private Integer artifactCount = 0;
-    
-    //status
+
     //scores
     //billingCodes
 
@@ -166,4 +165,5 @@ public class Engagement {
         //has not reached end date
         return EngagementState.ACTIVE;
     }
+
 }
