@@ -52,10 +52,16 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
      * replace root - allows mapping to use case object
      * @return all use cases possibly filtered by uuid
      */
-    public List<UseCase> getAllUseCases(PageFilter paging) {
+    public List<UseCase> getAllUseCases(PageFilter paging, Set<String> regions) {
         List<Bson> bson = new ArrayList<>();
-                
-        bson.add(match(Filters.exists("useCases.uuid")));
+
+        if(!regions.isEmpty()) {
+            bson.add(match(Filters.and(Filters.in("region", regions),
+                    Filters.ne("useCases.description", null))));
+        } else {
+            bson.add(match(Filters.ne("useCases.description", null)));
+        }
+
         bson.add(addFields(new Field<>("useCases.name", "$name"),
                 new Field<>("useCases.customerName", "$customerName"),
                 new Field<>("useCases.engagementUuid", "$uuid")

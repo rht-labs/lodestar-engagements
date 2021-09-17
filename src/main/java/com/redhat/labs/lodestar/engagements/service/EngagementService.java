@@ -223,8 +223,8 @@ public class EngagementService {
         return engagementRepository.getEngagement(uuid);
     }
     
-    public List<UseCase> getUseCases(PageFilter pageFilter) {
-        return engagementRepository.getAllUseCases(pageFilter);
+    public List<UseCase> getUseCases(PageFilter pageFilter, Set<String> regions) {
+        return  engagementRepository.getAllUseCases(pageFilter, regions);
     }
     
     public Optional<UseCase> getUseCase(String uuid) {

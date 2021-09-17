@@ -2,15 +2,11 @@ package com.redhat.labs.lodestar.engagements.resource;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
-import javax.ws.rs.BeanParam;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -32,8 +28,8 @@ public class UseCaseResource {
     EngagementService engagementService;
 
     @GET
-    public Response getUseCases(@BeanParam PageFilter pageFilter) {
-        List<UseCase> cases = engagementService.getUseCases(pageFilter);
+    public Response getUseCases(@BeanParam PageFilter pageFilter, @QueryParam("regions") Set<String> regions) {
+        List<UseCase> cases = engagementService.getUseCases(pageFilter, regions);
         return Response.ok(cases).header("x-total-use-cases", cases.size()).build();
     }
     

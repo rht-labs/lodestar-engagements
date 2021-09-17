@@ -11,6 +11,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import javax.validation.constraints.NotBlank;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -20,6 +22,8 @@ import lombok.ToString;
 public class UseCase {
 
     private String title;
+
+    @NotBlank
     private String description;
     private Integer order;
     

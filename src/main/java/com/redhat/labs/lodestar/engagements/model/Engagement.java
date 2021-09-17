@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.*;
 
 import javax.json.bind.annotation.JsonbTransient;
+import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import javax.ws.rs.WebApplicationException;
@@ -51,7 +52,8 @@ public class Engagement {
     
     @Builder.Default
     private Set<String> categories = new TreeSet<>();
-    
+
+    @Valid
     @Builder.Default
     private List<UseCase> useCases = new ArrayList<>();
 
