@@ -222,6 +222,10 @@ public class EngagementService {
     public Optional<Engagement> getEngagement(String uuid) {
         return engagementRepository.getEngagement(uuid);
     }
+
+    public Optional<Engagement> getEngagementByProject(int projectId) {
+        return engagementRepository.getEngagementByProject(projectId);
+    }
     
     public List<UseCase> getUseCases(PageFilter pageFilter, Set<String> regions) {
         return  engagementRepository.getAllUseCases(pageFilter, regions);

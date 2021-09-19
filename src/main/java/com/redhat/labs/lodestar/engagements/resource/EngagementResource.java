@@ -76,6 +76,18 @@ public class EngagementResource {
         
         return Response.status(404).entity(new ErrorMessage("No engagement found for uuid %s", uuid)).build();
     }
+
+    @GET
+    @Path("project/{id}")
+    public Response getEngagement(@PathParam("id") int projectId) {
+        Optional<Engagement> engagement = engagementService.getEngagementByProject(projectId);
+
+        if(engagement.isPresent()) {
+            return Response.ok(engagement).build();
+        }
+
+        return Response.status(404).entity(new ErrorMessage("No engagement found for project %s", projectId)).build();
+    }
     
     @DELETE
     @Path("{uuid}")

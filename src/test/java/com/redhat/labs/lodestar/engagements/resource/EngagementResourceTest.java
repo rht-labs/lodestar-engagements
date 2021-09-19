@@ -133,6 +133,20 @@ class EngagementResourceTest {
     }
 
     @Test
+    void testGetEngagementByProjectId() {
+        int projectId = 1;
+        given().pathParam("id", projectId).when().get("project/{id}").then().statusCode(200).body("uuid", equalTo("uuid1")).body("name", equalTo("banana"))
+                .body("customer_name", equalTo("Banana Hut")).body("categories", hasItems("mat", "pat", "rat", "bat", "cat", "fat"))
+                .body("use_cases[0].uuid", equalTo("use-case-1"));
+    }
+
+    @Test
+    void testGetEngagementByProjectIdNotFound() {
+        int projectId = 11;
+        given().pathParam("id", projectId).when().get("project/{id}").then().statusCode(404).body("message", equalTo("No engagement found for project 11"));
+    }
+
+    @Test
     void testGetEngagementByCustomerAndNameNotFound() {
         String customer = "nope";
         String name = "nada";

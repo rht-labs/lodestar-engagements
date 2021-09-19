@@ -104,6 +104,10 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
         return find("uuid", uuid).singleResultOptional();
     }
 
+    public Optional<Engagement> getEngagementByProject(int projectId) {
+        return find("projectId", projectId).singleResultOptional();
+    }
+
     public Optional<Engagement> getByCustomerAndEngagementName(String customerName, String engagementName) {
         return find("customerName = ?1 and name = ?2", customerName, engagementName).singleResultOptional();
     }
