@@ -30,7 +30,7 @@
       "created_date" : "2021-08-16T00:22:53.002243Z",
       "last_message" : "last message uuid1",
       "last_updated" : "2021-08-17T23:37:29.569939Z",
-      "last_update_name" : "Gaton Boucher",
+      "last_update_by_name" : "Gaton Boucher",
       "last_update_by_email" : "bot@bot.com",
       "project_id" : 2,
       "start_date" : "2021-07-29T00:22:53.002Z",

@@ -85,7 +85,7 @@ public class CategoryResource {
         
         if(engagement.isPresent()) {
             Engagement e = engagement.get();
-            e.setLastUpdateName(authorName);
+            e.setLastUpdateByName(authorName);
             e.setLastUpdateByEmail(authorEmail);
             
             categoryService.updateCategories(engagement.get(), categories);

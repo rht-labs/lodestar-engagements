@@ -59,14 +59,12 @@ public class GitlabService {
         
         Project project = gitlabApiClient.createProject(engagement.getUuid(), engagementGroup.getId());
         engagement.setProjectId(project.getId());
-        
+
+        gitlabApiClient.createWebhooks(engagement.getProjectId(), engagement.getState());
+        gitlabApiClient.activateDeployKey(engagement.getProjectId());
         gitlabApiClient.createEngagementFiles(engagement);
         
         engagementService.update(engagement, false);
-
-        
-        gitlabApiClient.createWebhooks(engagement.getProjectId(), engagement.getState());
-        gitlabApiClient.activateDeployKey(engagement.getProjectId());
 
         LOGGER.debug("creation complete {}", engagement);
     }

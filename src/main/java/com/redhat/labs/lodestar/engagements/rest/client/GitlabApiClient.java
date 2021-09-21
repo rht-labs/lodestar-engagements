@@ -378,7 +378,7 @@ public class GitlabApiClient {
                 .withBranch(branch)
                 .withCommitMessage(commitMessage)
                 .withAuthorEmail(engagement.getLastUpdateByEmail())
-                .withAuthorName(engagement.getLastUpdateName())
+                .withAuthorName(engagement.getLastUpdateByName())
                 .withActions(commitFiles);
         
         try {
@@ -410,7 +410,7 @@ public class GitlabApiClient {
         
         String message = String.format("Categories updated %s %s %n %s ",  getEmoji(), getEmoji(), engagement.getLastMessage());
         
-        commitUpdate(engagement.getProjectId(), message, commitActions, engagement.getLastUpdateName(), engagement.getLastUpdateByEmail());
+        commitUpdate(engagement.getProjectId(), message, commitActions, engagement.getLastUpdateByName(), engagement.getLastUpdateByEmail());
     }
     
     public void updateEngagementFile(Engagement engagement) {
@@ -427,7 +427,7 @@ public class GitlabApiClient {
                 .withAction(Action.UPDATE)
                 .withFilePath(engagementFile)
                 .withContent(engagementContent);
-        commitUpdate(engagement.getProjectId(), message, Collections.singletonList(action), engagement.getLastUpdateName(), engagement.getLastUpdateByEmail());
+        commitUpdate(engagement.getProjectId(), message, Collections.singletonList(action), engagement.getLastUpdateByName(), engagement.getLastUpdateByEmail());
         engagement.setLastMessage(message);
     }
     
@@ -456,8 +456,9 @@ public class GitlabApiClient {
             ProjectHook hook = new ProjectHook().withPushEvents(true).withPushEventsBranchFilter(h.getPushEventsBranchFilter());
             try {
                 gitlabApi.getProjectApi().addHook(projectId, h.getBaseUrl(), hook, true, h.getToken());
+                LOGGER.debug("Updated hooks for project {}", projectId);
             } catch (GitLabApiException e) {
-                throw new EngagementGitlabException(e.getHttpStatus(), e.getReason());
+                LOGGER.error("Unable to update hooks for project {} {} {}", projectId, e.getHttpStatus(), e.getReason());
             }
         });
     }
@@ -498,12 +499,9 @@ public class GitlabApiClient {
     }
     
     private String generateValidPath(Engagement engagement) {
-        return new StringBuilder(engagementPathPrefix)
-                .append("/")
-                .append(generateValidPath(engagement.getCustomerName()))
-                .append("/")
-                .append(generateValidPath(engagement.getName()))
-                .toString();
+        return engagementPathPrefix + "/" +
+                generateValidPath(engagement.getCustomerName()) + "/" +
+                generateValidPath(engagement.getName());
     }
     
     private String generateValidPath(String input) {

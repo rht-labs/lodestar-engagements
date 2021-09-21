@@ -58,7 +58,7 @@ public class EngagementService {
     
     @PostConstruct
     public void setupJavers() {
-        List<String> ignoredProps = Arrays.asList("id", "createdDate", "creationDetails", "lastMessage", "lastUpdateByEmail", "lastUpdateName",
+        List<String> ignoredProps = Arrays.asList("id", "createdDate", "creationDetails", "lastMessage", "lastUpdateByEmail", "lastUpdateByName",
                 "lastUpdated", "projectId");
 
         javers = JaversBuilder.javers().withListCompareAlgorithm(ListCompareAlgorithm.LEVENSHTEIN_DISTANCE)

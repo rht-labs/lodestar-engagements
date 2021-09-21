@@ -16,7 +16,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.redhat.labs.lodestar.engagements.validation.ValidName;
 
-import io.quarkus.mongodb.panache.PanacheMongoEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -61,7 +60,7 @@ public class Engagement {
     
     private String description;
     private String lastMessage;
-    private String lastUpdateName;
+    private String lastUpdateByName;
     private String lastUpdateByEmail;
     private String location;
     private String engagementLeadName;
@@ -100,7 +99,7 @@ public class Engagement {
             throw new WebApplicationException("Creator already set", 400);
         }
 
-        creationDetails = new CreationDetails(lastUpdateName, lastUpdateByEmail, createdDate);
+        creationDetails = new CreationDetails(lastUpdateByName, lastUpdateByEmail, createdDate);
     }
 
     public void updateTimestamps() {
