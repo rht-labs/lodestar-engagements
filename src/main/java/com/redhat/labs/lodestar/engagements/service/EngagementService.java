@@ -50,6 +50,9 @@ public class EngagementService {
 
     @Inject
     ArtifactService artifactService;
+
+    @Inject
+    ActivityService activityService;
     
     @Inject
     GitlabService gitlabService;
@@ -59,7 +62,7 @@ public class EngagementService {
     @PostConstruct
     public void setupJavers() {
         List<String> ignoredProps = Arrays.asList("id", "createdDate", "creationDetails", "lastMessage", "lastUpdateByEmail", "lastUpdateByName",
-                "lastUpdated", "projectId");
+                "lastUpdate", "projectId");
 
         javers = JaversBuilder.javers().withListCompareAlgorithm(ListCompareAlgorithm.LEVENSHTEIN_DISTANCE)
                 .registerEntity(new EntityDefinition(Engagement.class, "uuid", ignoredProps)).build();
@@ -106,6 +109,10 @@ public class EngagementService {
 
     public void updateCount(String uuid, int count, String column) {
         engagementRepository.updateCount(uuid, count, column);
+    }
+
+    public void updateLastUpdate(String uuid) {
+        engagementRepository.updateLastUpdate(uuid, Instant.now());
     }
     
     public boolean update(Engagement engagement) {
@@ -261,6 +268,8 @@ public class EngagementService {
         List<Engagement> engagements = gitlabService.getEngagements();
         participantService.addEngagementCount(engagements);
         artifactService.addEngagementCount(engagements);
+        activityService.getLastActivityPerEngagement(engagements);
+
         long purged = engagementRepository.purge();
         LOGGER.info("Purged {} engagements", purged);
         engagementRepository.persistAll(engagements);

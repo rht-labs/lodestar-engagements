@@ -77,7 +77,7 @@ public class Engagement {
     private Instant startDate;
     private Instant endDate;
     private Instant createdDate;
-    private Instant lastUpdated;
+    private Instant lastUpdate;
 
     @Builder.Default
     private Integer participantCount = 0;
@@ -109,7 +109,7 @@ public class Engagement {
             createdDate = now;
         }
 
-        lastUpdated = now;
+        lastUpdate = now;
     }
     
     /**
