@@ -252,6 +252,7 @@ public class EngagementService {
         List<Engagement> engagements = gitlabService.getEngagements(uuids);
         participantService.addEngagementCount(engagements);
         artifactService.addEngagementCount(engagements);
+        activityService.getLastActivityPerEngagement(engagements);
 
         for(Engagement e : engagements) {
             engagementRepository.delete("uuid = ?1", e.getEngagementLeadEmail());
