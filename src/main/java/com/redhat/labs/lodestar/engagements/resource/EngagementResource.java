@@ -148,6 +148,13 @@ public class EngagementResource {
         engagementService.updateCount(uuid, count, "artifactCount");
         return Response.ok().build();
     }
+
+    @PUT
+    @Path("{uuid}/lastUpdate")
+    public Response updateLastUpdate(@PathParam("uuid") String uuid) {
+        engagementService.updateLastUpdate(uuid);
+        return Response.ok().build();
+    }
     
     @PUT
     @Path("refresh")
@@ -203,7 +210,7 @@ public class EngagementResource {
     public Response getLastUpdate(@PathParam("uuid") String uuid) {
         Optional<Engagement> engagement = engagementService.getEngagement(uuid);
         if(engagement.isPresent()) {
-            return Response.ok().header(LAST_UPDATE_HEADER, engagement.get().getLastUpdated())
+            return Response.ok().header(LAST_UPDATE_HEADER, engagement.get().getLastUpdate())
                 .header(ACCESS_CONTROL_EXPOSE_HEADER, LAST_UPDATE_HEADER).build();
         }
 

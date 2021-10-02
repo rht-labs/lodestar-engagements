@@ -9,6 +9,7 @@ import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Filters.regex;
 import static com.mongodb.client.model.Sorts.descending;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.TreeSet;
 import java.util.List;
@@ -160,6 +161,10 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
 
     public void updateCount(String uuid, int count, String column) {
         update(column, count).where("uuid", uuid);
+    }
+
+    public void updateLastUpdate(String uuid, Instant time) {
+        update("lastUpdate", time).where("uuid", uuid);
     }
     
     public enum Columns {

@@ -263,6 +263,11 @@ class EngagementResourceTest {
     }
 
     @Test
+    void testUpdateLastUpdate() {
+        given().contentType(ContentType.JSON).pathParam("uuid", "uuid1").when().put("{uuid}/lastUpdate").then().statusCode(200);
+    }
+
+    @Test
     void testUpdateEngagement() {
         Engagement engagement = Engagement.builder().name("DO500").customerName("Fish Gym").region("na").type("Residency").build();
         engagementService.create(engagement);
