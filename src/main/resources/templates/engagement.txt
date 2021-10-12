@@ -1,0 +1,40 @@
+{
+{#if engagement.archiveDate != null } "archive_date": "{engagement.archiveDate}", {/if}{#if artifacts != null}
+  "artifacts": {artifacts},
+{/if}{#if categories != null }  "categories": {categories},
+{/if}{#if engagement.creationDetails != null }
+  "creation_details": {
+      "created_by_email": "{engagement.creationDetails.createdByEmail}",
+      "created_by_user": "{engagement.creationDetails.createdByUser}",
+      "created_on": "{engagement.creationDetails.createdOn}"
+  },
+{/if}{#if engagement.customerContactEmail != null }  "customer_contact_email": "{engagement.customerContactEmail}",
+{/if}{#if engagement.customerContactName != null }  "customer_contact_name": "{engagement.customerContactName}",
+{/if}{#if engagement.customerName != null }  "customer_name": "{engagement.customerName}",
+{/if}{#if engagement.description != null }  "description": "{engagement.description}",
+{/if}{#if engagement.endDate != null }  "end_date": "{engagement.endDate}",
+{/if}{#if engagement.engagementLeadEmail != null }  "engagement_lead_email": "{engagementLeadEmail}",
+{/if}{#if engagement.engagementLeadName != null }  "engagement_lead_name": "{engagement.engagementLeadName}",
+{/if}  "engagement_region": "{engagement.region}",
+  "engagement_type": "{engagement.type}",
+{#if participants != null}
+  "engagement_users": {participants},
+{/if}{#if hosting != null}
+  "hosting_environments": {hosting},
+{/if}
+{#if engagement.launch != null}
+  "launch": {
+    "launched_by": "{engagement.launchedBy}",
+    "launched_by_email": "{engagement.launchedByEmail}",
+    "launched_date_time": "{engagement.launchedDateTime}"
+  },
+{/if}  "project_id": {engagement.projectId},
+  "project_name": "{engagement.name}",
+{#if engagement.publicReference}  "public_reference": {engagement.publicReference},
+{/if}{#if engagement.startDate}  "start_date": "{engagement.startDate}",
+{/if}{#if engagement.technicalLeadEmail}  "technical_lead_email": "{engagement.technicalLeadEmail}",
+{/if}{#if engagement.technicalLeadName}  "technical_lead_name": "{engagement.technicalLeadName}",
+{/if}{#if engagement.timezone}  "timezone": "{engagement.timezone}",
+{/if}  "use_cases": {useCases},
+  "uuid": "{engagement.uuid}"
+}

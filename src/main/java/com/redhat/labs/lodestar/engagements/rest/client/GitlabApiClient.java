@@ -358,7 +358,11 @@ public class GitlabApiClient {
         
     }
     
-    public void createEngagementFiles(Engagement engagement) {
+    public void createEngagementFiles(Engagement engagement, String legacy) {
+        //Transient values set to null
+        engagement.setParticipantCount(null);
+        engagement.setHostingCount(null);
+        engagement.setArtifactCount(null);
         
         String engagementContent = json.toJson(engagement);
         
@@ -369,6 +373,13 @@ public class GitlabApiClient {
                 .withFilePath(engagementFile)
                 .withContent(engagementContent);
         
+        commitFiles.add(action);
+
+         action = new CommitAction()
+                .withAction(Action.CREATE)
+                .withFilePath("engagement.json")
+                .withContent(legacy);
+
         commitFiles.add(action);
 
         seedFileList.forEach(f -> commitFiles.add(new CommitAction().withAction(Action.CREATE).withFilePath(dataDir + f).withContent("[]")));
@@ -413,7 +424,9 @@ public class GitlabApiClient {
         commitUpdate(engagement.getProjectId(), message, commitActions, engagement.getLastUpdateByName(), engagement.getLastUpdateByEmail());
     }
     
-    public void updateEngagementFile(Engagement engagement) {
+    public void updateEngagementFile(Engagement engagement, String legacy) {
+        List<CommitAction> commitActions = new ArrayList<>();
+
         //Transient values set to null
         engagement.setParticipantCount(null);
         engagement.setHostingCount(null);
@@ -427,7 +440,16 @@ public class GitlabApiClient {
                 .withAction(Action.UPDATE)
                 .withFilePath(engagementFile)
                 .withContent(engagementContent);
-        commitUpdate(engagement.getProjectId(), message, Collections.singletonList(action), engagement.getLastUpdateByName(), engagement.getLastUpdateByEmail());
+        commitActions.add(action);
+
+        action = new CommitAction()
+                .withAction(Action.UPDATE)
+                .withFilePath("engagement.json")
+                .withContent(legacy);
+
+        commitActions.add(action);
+
+        commitUpdate(engagement.getProjectId(), message, commitActions, engagement.getLastUpdateByName(), engagement.getLastUpdateByEmail());
         engagement.setLastMessage(message);
     }
     

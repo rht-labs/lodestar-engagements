@@ -8,6 +8,8 @@ import java.util.Set;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import com.redhat.labs.lodestar.engagements.utils.JsonMarshaller;
+import io.quarkus.qute.Template;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
@@ -34,6 +36,14 @@ public class GitlabService {
 
     @Inject
     GitlabApiClient gitlabApiClient;
+
+    @Inject
+    JsonMarshaller json;
+
+    // Template to retrofit the data back to v1 for orchestration
+    // Burn after upgrade
+    @Inject
+    Template engagement;
 
     @ConfigProperty(name = "disable.refresh.bus")
     boolean disableBus;
@@ -62,7 +72,10 @@ public class GitlabService {
 
         gitlabApiClient.createWebhooks(engagement.getProjectId(), engagement.getState());
         gitlabApiClient.activateDeployKey(engagement.getProjectId());
-        gitlabApiClient.createEngagementFiles(engagement);
+
+        String legacy = this.createLegacyJson(engagement);
+
+        gitlabApiClient.createEngagementFiles(engagement, legacy);
         
         engagementService.update(engagement, false);
 
@@ -97,8 +110,11 @@ public class GitlabService {
         } else {
             LOGGER.debug("path did not change");
         }
-        
-        gitlabApiClient.updateEngagementFile(engagement);
+
+        List<Category> categories = categoryService.getCategories(engagement.getUuid());
+        String legacy = updateLegacyJson(engagement, null, null, null, categories);
+
+        gitlabApiClient.updateEngagementFile(engagement, legacy);
         engagementService.update(engagement, false);
 
     }
@@ -241,6 +257,16 @@ public class GitlabService {
         }
     }
     
-        
+    private String createLegacyJson(Engagement e) {
+        return updateLegacyJson(e, null, null, null, Collections.emptyList());
+    }
+
+    private String updateLegacyJson(Engagement e, String artifacts, String participants, String hosting, List<Category> categoryList) {
+        String categories = json.toJson(categoryList);
+        String useCases = json.toJson(e.getUseCases());
+
+        return engagement.data("engagement", e).data("artifacts", artifacts).data("participants", participants)
+                .data("hosting", hosting).data("useCases", useCases).data("categories", categories).render();
+    }
 
 }
