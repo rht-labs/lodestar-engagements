@@ -88,8 +88,8 @@ public class GitlabApiClient {
     
     @PostConstruct
     void setupGitlabClient() {
-        //Append slash - Multiple services use the gitUrl without the slash, derived from the same config
-        gitUrl += "/";
+        //Config is adding a line feed char
+        gitUrl.trim();
 
         LOGGER.info("Base url {}", gitUrl);
 
