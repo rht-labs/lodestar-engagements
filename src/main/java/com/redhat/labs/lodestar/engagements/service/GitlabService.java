@@ -91,7 +91,7 @@ public class GitlabService {
      */
     @ConsumeEvent(value = EngagementService.UPDATE_ENGAGEMENT, blocking = true)
     public void updateEngagementInGitlab(Engagement engagement) {
-        LOGGER.debug("Gitlabbing engagement update - {}", engagement);
+        LOGGER.debug("Gitlab engagement update - {}", engagement);
 
         Optional<Project> existingOption = gitlabApiClient.getProject(engagement.getProjectId());
 

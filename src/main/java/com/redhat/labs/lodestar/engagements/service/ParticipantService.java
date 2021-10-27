@@ -7,18 +7,24 @@ import org.slf4j.*;
 
 import javax.enterprise.context.*;
 import javax.inject.*;
+import javax.ws.rs.WebApplicationException;
 import java.util.*;
 
 @ApplicationScoped
 public class ParticipantService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ParticipantService.class);
 
     @Inject
     @RestClient
     ParticipantApiClient participantApiClient;
 
     public void addEngagementCount(List<Engagement> engagements) {
-        Map<String, Integer> engagementCounts = participantApiClient.getParticipantCounts();
-        engagements.forEach(e -> getCount(e, engagementCounts.get(e.getUuid())));
+        try {
+            Map<String, Integer> engagementCounts = participantApiClient.getParticipantCounts();
+            engagements.forEach(e -> getCount(e, engagementCounts.get(e.getUuid())));
+        } catch (WebApplicationException ex) {
+            LOGGER.error("Unable to fetch participant counts so they won't be set and are likely inaccurate", ex);
+        }
     }
 
     private void getCount(Engagement engagement, Integer count) {

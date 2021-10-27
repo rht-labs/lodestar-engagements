@@ -35,12 +35,12 @@ public class ExternalApiWireMock implements QuarkusTestResourceLifecycleManager 
 
         body = json.toJson(new Commit().withMessage("ExternalApiWireMock"));
         
-        stubFor(post(urlMatching("/api/v4/projects/[0-9][0-9]/repository/commits")).willReturn(aResponse()
+        stubFor(post(urlMatching("/api/v4/projects/[0-9]?\\d/repository/commits")).willReturn(aResponse()
                 .withHeader("Content-Type",  "application/json")
                 .withBody(body)
         ));
 
-        stubFor(post(urlMatching("/api/v4/projects/[0-9][0-9]/hooks")).willReturn(aResponse()
+        stubFor(post(urlMatching("/api/v4/projects/[0-9]?\\d/hooks")).willReturn(aResponse()
                 .withHeader("Content-Type",  "application/json")
                 .withBody(body)
         ));

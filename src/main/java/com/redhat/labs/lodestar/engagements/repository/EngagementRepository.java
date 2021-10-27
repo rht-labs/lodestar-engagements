@@ -33,13 +33,17 @@ import io.quarkus.mongodb.panache.PanacheMongoRepository;
 public class EngagementRepository implements PanacheMongoRepository<Engagement> {
 
     public List<Engagement> getEngagements(PageFilter pageFilter) {
-        return findAll(Sort.by("last_updated", Sort.Direction.Descending))
+        return findAll(Sort.by("lastUpdate", Sort.Direction.Descending))
                 .page(pageFilter.getPage(), pageFilter.getPageSize()).list();
     }
 
     public List<Engagement> getEngagements(PageFilter pageFilter, Set<String> regions) {
         return find("region in ?1", pageFilter.getPanacheSort(), regions)
                 .page(pageFilter.getPage(), pageFilter.getPageSize()).list();
+    }
+
+    public List<Engagement> findEngagementsWithoutLastUpdate() {
+        return list("lastUpdate is null");
     }
 
     public long countEngagements(Set<String> regions) {

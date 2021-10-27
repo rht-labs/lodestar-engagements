@@ -12,6 +12,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 import com.redhat.labs.lodestar.engagements.model.*;
+import io.quarkus.scheduler.Scheduled;
 import org.apache.http.HttpStatus;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
@@ -66,6 +67,29 @@ public class EngagementService {
 
         javers = JaversBuilder.javers().withListCompareAlgorithm(ListCompareAlgorithm.LEVENSHTEIN_DISTANCE)
                 .registerEntity(new EntityDefinition(Engagement.class, "uuid", ignoredProps)).build();
+    }
+
+    @Scheduled(every="5m")
+    void checkDB() {
+        long count = engagementRepository.count();
+
+        if(count == 0) {
+            LOGGER.info("No engagements found. Initiating refresh");
+            refresh();
+        }
+    }
+
+    @Scheduled(every = "5m", delayed = "1m")
+    void checkLastUpdate() {
+        List<Engagement> noUpdated = engagementRepository.findEngagementsWithoutLastUpdate();
+        if(!noUpdated.isEmpty()) {
+            LOGGER.info("Attempting update of last activity for {} engagements", noUpdated.size());
+            activityService.getLastActivityPerEngagement(noUpdated);
+            engagementRepository.update(noUpdated);
+            LOGGER.info("Updated complete");
+        } else {
+            LOGGER.debug("Last Activity accounted for");
+        }
     }
 
     public void create(Engagement engagement) {
@@ -129,7 +153,7 @@ public class EngagementService {
         Optional<Engagement> option = engagementRepository.getEngagement(engagement.getUuid());
 
         Engagement existing = option.orElseThrow(
-                () -> new WebApplicationException("no engagement found, use POST to create", HttpStatus.SC_NOT_FOUND));
+                () -> new WebApplicationException(String.format("no engagement found for uuid %s, use POST to create", engagement.getUuid()), HttpStatus.SC_NOT_FOUND));
 
         if (engagementRepository.isNameTaken(engagement.getUuid(), engagement.getCustomerName(), engagement.getName())) { // Checking customer + engagement name match
             throw new WebApplicationException("This engagement name is in use by another uuid", Status.CONFLICT);

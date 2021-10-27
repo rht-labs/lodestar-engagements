@@ -6,6 +6,7 @@ import com.redhat.labs.lodestar.engagements.model.Engagement;
 import com.redhat.labs.lodestar.engagements.repository.EngagementRepository;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
@@ -24,10 +25,18 @@ class GitlabServiceTest {
     EngagementRepository engagementRepository;
 
     @Inject
+    EngagementService engagementService;
+
+    @Inject
     GitlabService gitlabService;
 
     @Inject
     ConfigService configService;
+
+    @BeforeEach
+    void init() {
+        engagementService.refresh();
+    }
 
     @Test
     void testCreateEngagement() {
@@ -57,6 +66,8 @@ class GitlabServiceTest {
 
         engagementRepository.persist(engagement);
         engagement.setStartDate(Instant.now()); //Fake change
+
+        assertTrue(engagementRepository.getEngagement(engagement.getUuid()).isPresent());
 
         gitlabService.updateEngagementInGitlab(engagement);
 
