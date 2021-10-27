@@ -88,20 +88,24 @@ public class GitlabApiClient {
     
     @PostConstruct
     void setupGitlabClient() {
+        //Append slash - Multiple services use the gitUrl without the slash, derived from the same config
+        gitUrl += "/";
+
+        LOGGER.info("Base url {}", gitUrl);
+
         gitlabApi = new GitLabApi(gitUrl, pat);
         gitlabApi.enableRequestResponseLogging();
         
         Group headGroup;
         try {
             headGroup = gitlabApi.getGroupApi().getGroup(engagementRepositoryId);
-        
-        
-        if(headGroup == null) {
-            LOGGER.warn("Could not find the path for repo {}", engagementRepositoryId);
-        } else {
-            engagementPathPrefix = headGroup.getFullPath();
-            LOGGER.info("Engagement repo set to {}", engagementPathPrefix);
-        }
+
+            if(headGroup == null) {
+                LOGGER.warn("Could not find the path for repo {}", engagementRepositoryId);
+            } else {
+                engagementPathPrefix = headGroup.getFullPath();
+                LOGGER.info("Engagement repo set to {}", engagementPathPrefix);
+            }
         } catch (GitLabApiException e) {
             LOGGER.error("Gitlab api is not working", e);
         }
