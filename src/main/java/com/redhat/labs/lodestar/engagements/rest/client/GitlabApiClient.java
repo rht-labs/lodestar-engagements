@@ -89,7 +89,7 @@ public class GitlabApiClient {
     @PostConstruct
     void setupGitlabClient() {
         //Config is adding a line feed char
-        gitUrl.trim();
+        gitUrl = gitUrl.trim();
 
         LOGGER.info("Base url {}", gitUrl);
 
