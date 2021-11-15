@@ -70,14 +70,12 @@ public class GitlabService {
         Project project = gitlabApiClient.createProject(engagement.getUuid(), engagementGroup.getId());
         engagement.setProjectId(project.getId());
 
+        String legacy = this.createLegacyJson(engagement);
+        gitlabApiClient.createEngagementFiles(engagement, legacy);
+        engagementService.update(engagement, false);
+
         gitlabApiClient.createWebhooks(engagement.getProjectId(), engagement.getState());
         gitlabApiClient.activateDeployKey(engagement.getProjectId());
-
-        String legacy = this.createLegacyJson(engagement);
-
-        gitlabApiClient.createEngagementFiles(engagement, legacy);
-        
-        engagementService.update(engagement, false);
 
         LOGGER.debug("creation complete {}", engagement);
     }

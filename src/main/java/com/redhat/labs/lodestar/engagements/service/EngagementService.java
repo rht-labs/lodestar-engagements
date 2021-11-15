@@ -106,7 +106,7 @@ public class EngagementService {
         engagement.updateTimestamps();
         engagement.setCreator();
         engagementRepository.persist(engagement);
-       
+
         bus.publish(CREATE_ENGAGEMENT, engagement);
     }
 
@@ -136,6 +136,7 @@ public class EngagementService {
     }
 
     public void updateLastUpdate(String uuid) {
+        LOGGER.debug("last update for {}", uuid);
         engagementRepository.updateLastUpdate(uuid, Instant.now());
     }
     
@@ -148,6 +149,8 @@ public class EngagementService {
     }
     
     public boolean update(Engagement engagement, boolean updateGitlab, boolean categoryUpdate) {
+        LOGGER.debug("updating e {} up git {} up cat {}", engagement.getUuid(), updateGitlab, categoryUpdate);
+
         boolean updated = false;
 
         Optional<Engagement> option = engagementRepository.getEngagement(engagement.getUuid());
@@ -159,7 +162,10 @@ public class EngagementService {
             throw new WebApplicationException("This engagement name is in use by another uuid", Status.CONFLICT);
         }
 
-        engagement.updateTimestamps();
+        if(updateGitlab) {
+            engagement.updateTimestamps();
+        }
+
         boolean initialFieldUpdated = engagement.overrideImmutableFields(existing, categoryUpdate);
 
         updateUseCases(engagement, existing);

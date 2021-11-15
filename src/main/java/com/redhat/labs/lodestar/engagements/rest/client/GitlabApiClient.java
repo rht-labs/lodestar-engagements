@@ -358,7 +358,9 @@ public class GitlabApiClient {
             DeployKey key = gitlabApi.getDeployKeysApi().enableDeployKey(projectId, deployKey);
             gitlabApi.getDeployKeysApi().updateDeployKey(projectId , deployKey, String.format("%s %s",key.getTitle(), environment), true);
         } catch (GitLabApiException e) {
-            throw new EngagementGitlabException(e.getHttpStatus(), e.getReason(), "Failed to activate deploy key for project " + projectId);
+            //A notification should be sent here. This won't error out the process but it should reconcile
+            LOGGER.error(String.format("Failed to activate deploy key for project %d Status(%d) Reason(%s)", projectId,
+                    e.getHttpStatus(), e.getReason()));
         }
         
     }
