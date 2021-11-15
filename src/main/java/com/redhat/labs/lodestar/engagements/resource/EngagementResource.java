@@ -107,8 +107,13 @@ public class EngagementResource {
         
         UriBuilder builder = uriInfo.getAbsolutePathBuilder();
         builder.path(engagement.getUuid());
-        
-        return Response.created(builder.build()).entity(engagement).build();
+
+        Optional<Engagement> persisted = engagementService.getEngagement(engagement.getUuid());
+        if(persisted.isPresent()) {
+            return Response.created(builder.build()).entity(persisted).build();
+        }
+
+        return Response.created(builder.build()).build();
     }
     
     @PUT
