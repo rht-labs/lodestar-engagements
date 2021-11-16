@@ -42,6 +42,8 @@ public class GitlabApiClient {
     private static final String PROJECT_NAME = "iac";
     private static final String LAUNCHED_MESSAGE = "Launch Ahoy!";
     private static final String SUMMARY_MESSAGE = "Summary Update";
+    private static final String DEPLOYMENT_KEY_PREFIX = "LodeStar";
+    private static final String DEPLOYMENT_KEY_POSTFIX = "DK";
     
     @ConfigProperty(name = "file.engagement")
     String engagementFile;
@@ -356,7 +358,8 @@ public class GitlabApiClient {
     public void activateDeployKey(Integer projectId) {
         try {
             DeployKey key = gitlabApi.getDeployKeysApi().enableDeployKey(projectId, deployKey);
-            gitlabApi.getDeployKeysApi().updateDeployKey(projectId , deployKey, String.format("%s %s",key.getTitle(), environment), true);
+            gitlabApi.getDeployKeysApi().updateDeployKey(projectId , deployKey,
+                    String.format("%s %s %s",DEPLOYMENT_KEY_PREFIX, environment, DEPLOYMENT_KEY_POSTFIX), true);
         } catch (GitLabApiException e) {
             //A notification should be sent here. This won't error out the process but it should reconcile
             LOGGER.error(String.format("Failed to activate deploy key for project %d Status(%d) Reason(%s)", projectId,
