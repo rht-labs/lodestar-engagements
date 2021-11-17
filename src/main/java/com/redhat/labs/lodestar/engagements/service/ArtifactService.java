@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ public class ArtifactService {
         try {
             Map<String, Integer> engagementCounts = artifactApiClient.getArtifactCounts();
             engagements.forEach(e -> getCount(e, engagementCounts.get(e.getUuid())));
-        } catch (WebApplicationException ex) {
+        } catch (WebApplicationException| ProcessingException ex) {
             LOGGER.error("Unable to fetch artifact counts so they won't be set and are likely inaccurate", ex);
         }
     }
