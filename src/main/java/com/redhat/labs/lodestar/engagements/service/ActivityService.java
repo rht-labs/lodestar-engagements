@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -25,7 +26,7 @@ public class ActivityService {
         try {
             Map<String, OffsetDateTime> lastUpdates = activityApiClient.getActivityPerEngagement();
             engagements.forEach(e -> getLastActivity(e, lastUpdates.get(e.getUuid())));
-        } catch (WebApplicationException ex) {
+        } catch (WebApplicationException | ProcessingException ex) {
             LOGGER.error("Unable to fetch last activity so they won't be set and are likely inaccurate", ex);
         }
     }

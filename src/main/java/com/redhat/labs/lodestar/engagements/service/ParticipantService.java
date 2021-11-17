@@ -7,6 +7,7 @@ import org.slf4j.*;
 
 import javax.enterprise.context.*;
 import javax.inject.*;
+import javax.ws.rs.ProcessingException;
 import javax.ws.rs.WebApplicationException;
 import java.util.*;
 
@@ -19,10 +20,11 @@ public class ParticipantService {
     ParticipantApiClient participantApiClient;
 
     public void addEngagementCount(List<Engagement> engagements) {
+        LOGGER.debug("Get counts for {} engagements", engagements.size());
         try {
             Map<String, Integer> engagementCounts = participantApiClient.getParticipantCounts();
             engagements.forEach(e -> getCount(e, engagementCounts.get(e.getUuid())));
-        } catch (WebApplicationException ex) {
+        } catch (WebApplicationException | ProcessingException ex) {
             LOGGER.error("Unable to fetch participant counts so they won't be set and are likely inaccurate", ex);
         }
     }
