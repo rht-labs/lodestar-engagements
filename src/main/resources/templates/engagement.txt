@@ -13,7 +13,7 @@
 {/if}{#if engagement.customerName != null }  "customer_name": "{engagement.customerName}",
 {/if}{#if engagement.description != null }  "description": "{engagement.description}",
 {/if}{#if engagement.endDate != null }  "end_date": "{engagement.endDate}",
-{/if}{#if engagement.engagementLeadEmail != null }  "engagement_lead_email": "{engagementLeadEmail}",
+{/if}{#if engagement.engagementLeadEmail != null }  "engagement_lead_email": "{engagement.engagementLeadEmail}",
 {/if}{#if engagement.engagementLeadName != null }  "engagement_lead_name": "{engagement.engagementLeadName}",
 {/if}  "engagement_region": "{engagement.region}",
   "engagement_type": "{engagement.type}",
