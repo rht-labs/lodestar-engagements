@@ -24,9 +24,9 @@
 {/if}
 {#if engagement.launch != null}
   "launch": {
-    "launched_by": "{engagement.launchedBy}",
-    "launched_by_email": "{engagement.launchedByEmail}",
-    "launched_date_time": "{engagement.launchedDateTime}"
+    "launched_by": "{engagement.launch.launchedBy}",
+    "launched_by_email": "{engagement.launch.launchedByEmail}",
+    "launched_date_time": "{engagement.launch.launchedDateTime}"
   },
 {/if}  "project_id": {engagement.projectId},
   "project_name": "{engagement.name}",
