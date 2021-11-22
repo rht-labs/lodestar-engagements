@@ -70,6 +70,18 @@ public class ExternalApiWireMock implements QuarkusTestResourceLifecycleManager 
                 .withBody(body)
         ));
 
+        stubFor(get(urlEqualTo("/api/v4/projects/12/repository/files/engagement%2Ejson?ref=master")).willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type",  "application/json")
+                .withBody(body)
+        ));
+
+        stubFor(get(urlEqualTo("/api/v4/projects/15/repository/files/engagement%2Ejson?ref=master")).willReturn(aResponse()
+                .withStatus(200)
+                .withHeader("Content-Type",  "application/json")
+                .withBody(body)
+        ));
+
         body = ResourceLoader.loadGitlabFile("gitlab-engagement-file-2.json");
 
         stubFor(get(urlEqualTo("/api/v4/projects/2/repository/files/engagement%2Fengagement%2Ejson?ref=master")).willReturn(aResponse()
