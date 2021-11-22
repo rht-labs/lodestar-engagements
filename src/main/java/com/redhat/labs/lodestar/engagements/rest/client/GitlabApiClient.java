@@ -179,6 +179,19 @@ public class GitlabApiClient {
         }
     }
 
+    public String getLegacyEngagement(Integer projectId) {
+        try {
+            RepositoryFile file = gitlabApi.getRepositoryFileApi().getFile(projectId, "engagement.json", branch);
+            return new String(file.getDecodedContentAsBytes(), StandardCharsets.UTF_8);
+        } catch (GitLabApiException e) {
+            if(e.getHttpStatus() == 404) {
+                LOGGER.debug("Could find not legacy file {} for project {}", "engagement.json", projectId);
+                return null;
+            }
+            throw new EngagementGitlabException(e.getHttpStatus(), e.getReason(), "Legacy Engagement File Not Retrieved " + projectId);
+        }
+    }
+
     public List<Engagement> getEngagements(Set<String> uuids) {
         GroupProjectsFilter filter = new GroupProjectsFilter()
                 .withIncludeSubGroups(true);

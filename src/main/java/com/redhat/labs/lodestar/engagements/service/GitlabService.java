@@ -1,13 +1,11 @@
 package com.redhat.labs.lodestar.engagements.service;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import com.google.gson.*;
 import com.redhat.labs.lodestar.engagements.utils.JsonMarshaller;
 import io.quarkus.qute.Template;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -47,6 +45,8 @@ public class GitlabService {
 
     @ConfigProperty(name = "disable.refresh.bus")
     boolean disableBus;
+
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
     
     /**
      * Creates:
@@ -109,8 +109,7 @@ public class GitlabService {
             LOGGER.debug("path did not change");
         }
 
-        List<Category> categories = categoryService.getCategories(engagement.getUuid());
-        String legacy = updateLegacyJson(engagement, null, null, null, categories);
+        String legacy = updateLegacyJson(engagement);
 
         gitlabApiClient.updateEngagementFile(engagement, legacy);
         engagementService.update(engagement, false);
@@ -256,15 +255,54 @@ public class GitlabService {
     }
     
     private String createLegacyJson(Engagement e) {
-        return updateLegacyJson(e, null, null, null, Collections.emptyList());
+        return getLegacyJson(e, new JsonObject());
     }
 
-    private String updateLegacyJson(Engagement e, String artifacts, String participants, String hosting, List<Category> categoryList) {
-        String categories = json.toJson(categoryList);
-        String useCases = json.toJson(e.getUseCases());
+    private String updateLegacyJson(Engagement e) {
+        String legacy = gitlabApiClient.getLegacyEngagement(e.getProjectId());
 
-        return engagement.data("engagement", e).data("artifacts", artifacts).data("participants", participants)
-                .data("hosting", hosting).data("useCases", useCases).data("categories", categories).render();
+        JsonElement legacyElement = gson.fromJson(legacy, JsonElement.class);
+        JsonObject legacyJsonObject = legacyElement.getAsJsonObject();
+
+        return getLegacyJson(e, legacyJsonObject);
+    }
+
+    String getLegacyJson(Engagement e, JsonObject legacyJsonObject) {
+
+        String v2 = json.toJson(e);
+        JsonElement v2element = gson.fromJson(v2, JsonElement.class);
+        JsonObject v2FullObject = v2element.getAsJsonObject();
+
+        addElement("hosting_environments", legacyJsonObject, v2FullObject );
+        addElement("engagement_users", legacyJsonObject, v2FullObject );
+        addElement("artifacts", legacyJsonObject, v2FullObject );
+        renameElement("type", "engagement_type", v2FullObject);
+        renameElement("region", "engagement_region", v2FullObject);
+        v2FullObject.remove("participant_count");
+        v2FullObject.remove("hosting_count");
+        v2FullObject.remove("artifact_count");
+
+        //sort for readability on commit
+        JsonObject sorted = new JsonObject();
+        v2FullObject.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(es -> sorted.add(es.getKey(), es.getValue()));
+
+        LOGGER.debug("render {}", gson.toJson(sorted));
+
+        return gson.toJson(sorted);
+    }
+
+    void addElement(String elementName, JsonObject existing, JsonObject newValues) {
+        //GET
+        JsonElement hostingElement = existing.get(elementName);
+        //ADD
+        newValues.add(elementName, hostingElement);
+    }
+
+    void renameElement(String elementName, String newElementName, JsonObject newValues) {
+        //GET
+        JsonElement hostingElement = newValues.get(elementName);
+        //ADD
+        newValues.add(newElementName, hostingElement);
     }
 
 }
