@@ -278,6 +278,7 @@ public class GitlabService {
         addElement("artifacts", legacyJsonObject, v2FullObject );
         renameElement("type", "engagement_type", v2FullObject);
         renameElement("region", "engagement_region", v2FullObject);
+        renameElement("name", "project_name", v2FullObject);
         v2FullObject.remove("participant_count");
         v2FullObject.remove("hosting_count");
         v2FullObject.remove("artifact_count");
