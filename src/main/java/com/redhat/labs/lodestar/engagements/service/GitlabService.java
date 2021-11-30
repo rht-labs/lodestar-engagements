@@ -282,6 +282,7 @@ public class GitlabService {
         v2FullObject.remove("participant_count");
         v2FullObject.remove("hosting_count");
         v2FullObject.remove("artifact_count");
+        v2FullObject.remove("last_message");
 
         //sort for readability on commit
         JsonObject sorted = new JsonObject();
