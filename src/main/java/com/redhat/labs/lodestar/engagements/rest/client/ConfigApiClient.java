@@ -25,6 +25,6 @@ public interface ConfigApiClient {
 
     @GET
     @Path("runtime")
-    String getRuntimeConfig(@QueryParam("type") Optional<String> type);
+    String getRuntimeConfig(@QueryParam("type") String type);
 
 }
