@@ -24,10 +24,6 @@ public interface ConfigApiClient {
 
     @GET
     @Path("runtime")
-<<<<<<< HEAD
-    String getRuntimeConfig(@QueryParam("engagementType") String engagementType);
-=======
     String getRuntimeConfig(@QueryParam("type") String type);
->>>>>>> feature/issue-928
 
 }
