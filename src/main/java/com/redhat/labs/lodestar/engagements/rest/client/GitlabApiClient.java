@@ -508,6 +508,12 @@ public class GitlabApiClient {
         });
     }
 
+    //TODO: redo it!
+    public void createRuntimeConfig() {
+        String runtimeConfig = configService.getRuntimeConfig(null);
+        LOGGER.info(runtimeConfig);
+    }
+
     public void deleteProjectHooks(int projectId) {
         getProjectHooks(projectId).forEach(hook -> {
             try {

@@ -1,7 +1,11 @@
 package com.redhat.labs.lodestar.engagements.service;
 
+import java.util.Optional;
+import java.io.ByteArrayInputStream;
+
 import com.redhat.labs.lodestar.engagements.model.HookConfig;
 import com.redhat.labs.lodestar.engagements.rest.client.ConfigApiClient;
+
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.javers.core.Javers;
@@ -16,6 +20,8 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
+import javax.ws.rs.core.Response;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -71,5 +77,21 @@ public class ConfigService {
         }
 
         return webhooks;
+    }
+
+    //TODO: something is not very good here
+    public String getRuntimeConfig(Optional<String> type) {
+        Response response = configApiClient.getRuntimeConfig(type.isPresent() ? type.get() : null);
+
+        if (response.hasEntity()) {
+
+            ByteArrayInputStream is = (ByteArrayInputStream) response.getEntity();
+            var bytes = new byte[is.available()];
+            is.read(bytes, 0, is.available());
+            return new String(bytes);
+
+        }
+
+        return null;
     }
 }
