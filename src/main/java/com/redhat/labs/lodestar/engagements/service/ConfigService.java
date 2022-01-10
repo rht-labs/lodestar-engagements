@@ -84,6 +84,7 @@ public class ConfigService {
         Response response = configApiClient.getRuntimeConfig(type.isPresent() ? type.get() : null);
 
         if (response.hasEntity()) {
+            LOGGER.debug("Got some runtime config");
 
             ByteArrayInputStream is = (ByteArrayInputStream) response.getEntity();
             var bytes = new byte[is.available()];
@@ -92,6 +93,7 @@ public class ConfigService {
 
         }
 
+        LOGGER.debug("Runtime config is empty");
         return null;
     }
 }

@@ -510,7 +510,7 @@ public class GitlabApiClient {
 
     //TODO: redo it!
     public void createRuntimeConfig() {
-        String runtimeConfig = configService.getRuntimeConfig(Optional.empty());
+        String runtimeConfig = configService.getRuntimeConfig(Optional.of("DO500"));
         LOGGER.info(runtimeConfig);
     }
 
