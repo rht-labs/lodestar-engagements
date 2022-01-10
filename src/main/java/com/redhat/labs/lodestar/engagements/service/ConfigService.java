@@ -1,8 +1,5 @@
 package com.redhat.labs.lodestar.engagements.service;
 
-import java.util.Optional;
-import java.io.ByteArrayInputStream;
-
 import com.redhat.labs.lodestar.engagements.model.HookConfig;
 import com.redhat.labs.lodestar.engagements.rest.client.ConfigApiClient;
 
@@ -19,8 +16,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
-import javax.ws.rs.core.Response;
 
 import java.util.Collections;
 import java.util.List;
