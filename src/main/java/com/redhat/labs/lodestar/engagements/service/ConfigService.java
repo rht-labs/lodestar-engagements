@@ -78,9 +78,6 @@ public class ConfigService {
     public String getRuntimeConfig(String engagementType) {
         LOGGER.debug("Requested runtime configuration type ({})", engagementType);
 
-        String config = configApiClient.getRuntimeConfig(engagementType);
-        LOGGER.debug("Returned runtime config {}", config);
-        
         return configApiClient.getRuntimeConfig(engagementType);
     }
 }
