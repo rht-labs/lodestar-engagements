@@ -401,6 +401,11 @@ public class GitlabApiClient {
         
         commitFiles.add(action);
 
+        String runtimeInfoContent = configService.getRuntimeConfig(engagement.getType());
+        LOGGER.debug("Runtime file: {}", runtimeInfoFile);
+        LOGGER.debug(runtimeInfoContent);
+        
+
          action = new CommitAction()
                 .withAction(Action.CREATE)
                 .withFilePath("engagement.json")
@@ -467,9 +472,6 @@ public class GitlabApiClient {
                 .withFilePath(engagementFile)
                 .withContent(engagementContent);
         commitActions.add(action);
-
-        String runtimeInfoContent = configService.getRuntimeConfig(engagement.getType());
-        LOGGER.debug(runtimeInfoContent);
 
         action = new CommitAction()
                 .withAction(Action.UPDATE)
