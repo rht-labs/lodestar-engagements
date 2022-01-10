@@ -19,6 +19,7 @@ import javax.inject.Inject;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class ConfigService {
@@ -76,6 +77,8 @@ public class ConfigService {
 
     public String getRuntimeConfig(String engagementType) {
         LOGGER.debug("Requested runtime configuration type {}", engagementType);
-        return configApiClient.getRuntimeConfig(engagementType);
+
+        Optional<String> configRuntimeOption = Optional.ofNullable(engagementType);
+        return configApiClient.getRuntimeConfig(configRuntimeOption);
     }
 }
