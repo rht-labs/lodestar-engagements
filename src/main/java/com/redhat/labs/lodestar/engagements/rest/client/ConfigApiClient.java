@@ -25,7 +25,7 @@ public interface ConfigApiClient {
     List<HookConfig> getWebhooks();
 
     @GET
-    @Produces("application/json")
-    Response getRuntimeConfig(@QueryParam("type") String type);
+    @Path("runtime")
+    String getRuntimeConfig(@QueryParam("engagementType") String engagementType);
 
 }

@@ -81,19 +81,8 @@ public class ConfigService {
 
     //TODO: something is not very good here
     public String getRuntimeConfig(Optional<String> type) {
-        Response response = configApiClient.getRuntimeConfig(type.isPresent() ? type.get() : null);
+        LOGGER.debug("Requested runtime configuration type {}", type);
+        return configApiClient.getRuntimeConfig(type.isPresent() ? type.get() : null);
 
-        if (response.hasEntity()) {
-            LOGGER.debug("Got some runtime config");
-
-            ByteArrayInputStream is = (ByteArrayInputStream) response.getEntity();
-            var bytes = new byte[is.available()];
-            is.read(bytes, 0, is.available());
-            return new String(bytes);
-
-        }
-
-        LOGGER.debug("Runtime config is empty");
-        return null;
     }
 }

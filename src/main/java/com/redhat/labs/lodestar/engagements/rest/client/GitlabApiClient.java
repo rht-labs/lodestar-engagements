@@ -510,8 +510,8 @@ public class GitlabApiClient {
 
     //TODO: redo it!
     public void createRuntimeConfig() {
-        String runtimeConfig = configService.getRuntimeConfig(Optional.of("DO500"));
-        LOGGER.info(runtimeConfig);
+        String config = configService.getRuntimeConfig(Optional.of("DO500"));
+        LOGGER.debug(config);
     }
 
     public void deleteProjectHooks(int projectId) {
