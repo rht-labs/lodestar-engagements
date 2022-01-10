@@ -509,8 +509,8 @@ public class GitlabApiClient {
     }
 
     //TODO: redo it!
-    public void createRuntimeConfig() {
-        String config = configService.getRuntimeConfig(Optional.of("DO500"));
+    public void createRuntimeConfig(String engagementType) {
+        String config = configService.getRuntimeConfig(Optional.of(engagementType));
         LOGGER.debug(config);
     }
 
