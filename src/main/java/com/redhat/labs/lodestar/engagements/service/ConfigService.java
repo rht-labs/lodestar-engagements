@@ -80,9 +80,8 @@ public class ConfigService {
     }
 
     //TODO: something is not very good here
-    public String getRuntimeConfig(Optional<String> type) {
-        LOGGER.debug("Requested runtime configuration type {}", type);
-        return configApiClient.getRuntimeConfig(type.isPresent() ? type.get() : null);
-
+    public String getRuntimeConfig(String engagementType) {
+        LOGGER.debug("Requested runtime configuration type {}", engagementType);
+        return configApiClient.getRuntimeConfig(engagementType);
     }
 }

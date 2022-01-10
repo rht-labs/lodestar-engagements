@@ -77,8 +77,6 @@ public class GitlabService {
         gitlabApiClient.createWebhooks(engagement.getProjectId(), engagement.getState());
         gitlabApiClient.activateDeployKey(engagement.getProjectId());
 
-        gitlabApiClient.createRuntimeConfig(engagement.getType());
-
         LOGGER.debug("creation complete {}", engagement);
     }
     

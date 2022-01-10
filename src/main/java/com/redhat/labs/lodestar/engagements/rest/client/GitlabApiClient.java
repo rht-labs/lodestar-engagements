@@ -47,6 +47,9 @@ public class GitlabApiClient {
     
     @ConfigProperty(name = "file.engagement")
     String engagementFile;
+
+    @ConfigProperty(name = "file.runtime")
+    String runtimeInfoFile;
     
     @ConfigProperty(name = "file.category")
     String categoryFile;
@@ -465,6 +468,9 @@ public class GitlabApiClient {
                 .withContent(engagementContent);
         commitActions.add(action);
 
+        String runtimeInfoContent = configService.getRuntimeConfig(engagement.getType());
+        LOGGER.debug(runtimeInfoContent);
+
         action = new CommitAction()
                 .withAction(Action.UPDATE)
                 .withFilePath("engagement.json")
@@ -509,10 +515,10 @@ public class GitlabApiClient {
     }
 
     //TODO: redo it!
-    public void createRuntimeConfig(String engagementType) {
-        String config = configService.getRuntimeConfig(Optional.of(engagementType));
-        LOGGER.debug(config);
-    }
+//    public void createRuntimeConfig(String engagementType) {
+//        String config = configService.getRuntimeConfig(Optional.of(engagementType));
+//        LOGGER.debug(config);
+//    }
 
     public void deleteProjectHooks(int projectId) {
         getProjectHooks(projectId).forEach(hook -> {
