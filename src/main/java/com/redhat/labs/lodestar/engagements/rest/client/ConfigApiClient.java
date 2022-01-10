@@ -11,7 +11,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import java.util.List;
-import java.util.Optional;
 
 @Retry(maxRetries = 5, delay = 1200, retryOn = NoHttpResponseException.class, abortOn = WebApplicationException.class)
 @RegisterRestClient(configKey = "config.api")
