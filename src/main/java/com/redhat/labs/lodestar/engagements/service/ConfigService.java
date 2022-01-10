@@ -79,7 +79,6 @@ public class ConfigService {
         return webhooks;
     }
 
-    //TODO: something is not very good here
     public String getRuntimeConfig(String engagementType) {
         LOGGER.debug("Requested runtime configuration type {}", engagementType);
         return configApiClient.getRuntimeConfig(engagementType);

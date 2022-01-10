@@ -402,8 +402,6 @@ public class GitlabApiClient {
         commitFiles.add(action);
 
         String runtimeInfoContent = configService.getRuntimeConfig(engagement.getType());
-        LOGGER.debug("Runtime file: {}", runtimeInfoFile);
-        LOGGER.debug(runtimeInfoContent);
         action = new CommitAction()
                 .withAction(Action.CREATE)
                 .withFilePath(runtimeInfoFile)
@@ -519,12 +517,6 @@ public class GitlabApiClient {
             }
         });
     }
-
-    //TODO: redo it!
-//    public void createRuntimeConfig(String engagementType) {
-//        String config = configService.getRuntimeConfig(Optional.of(engagementType));
-//        LOGGER.debug(config);
-//    }
 
     public void deleteProjectHooks(int projectId) {
         getProjectHooks(projectId).forEach(hook -> {
