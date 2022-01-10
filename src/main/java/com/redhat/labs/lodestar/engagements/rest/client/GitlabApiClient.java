@@ -47,6 +47,9 @@ public class GitlabApiClient {
     
     @ConfigProperty(name = "file.engagement")
     String engagementFile;
+
+    @ConfigProperty(name = "file.runtime")
+    String runtimeInfoFile;
     
     @ConfigProperty(name = "file.category")
     String categoryFile;
@@ -396,6 +399,13 @@ public class GitlabApiClient {
                 .withFilePath(engagementFile)
                 .withContent(engagementContent);
         
+        commitFiles.add(action);
+
+        String runtimeInfoContent = configService.getRuntimeConfig(engagement.getType());
+        action = new CommitAction()
+                .withAction(Action.CREATE)
+                .withFilePath(runtimeInfoFile)
+                .withContent(runtimeInfoContent);
         commitFiles.add(action);
 
          action = new CommitAction()
