@@ -402,8 +402,6 @@ public class GitlabApiClient {
         commitFiles.add(action);
 
         String runtimeInfoContent = configService.getRuntimeConfig(engagement.getType());
-        LOGGER.debug("Returned runtime config {}", runtimeInfoContent);
-
         action = new CommitAction()
                 .withAction(Action.CREATE)
                 .withFilePath(runtimeInfoFile)
