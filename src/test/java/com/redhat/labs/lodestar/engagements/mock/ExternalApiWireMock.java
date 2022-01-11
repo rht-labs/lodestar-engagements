@@ -140,6 +140,11 @@ public class ExternalApiWireMock implements QuarkusTestResourceLifecycleManager 
         stubFor(get(urlEqualTo("/api/v1/configs/webhooks")).willReturn(aResponse()
                 .withHeader("Content-Type",  "application/json").withStatus(200).withBody(body)));
 
+        body = ResourceLoader.load("runtime-config.json");
+
+        stubFor(get(urlEqualTo("/api/v1/configs/runtime?type=Residency")).willReturn(aResponse()
+                .withHeader("Content-Type", "application/json").withStatus(200).withBody(body)));
+
         //create engagement
         stubFor(this.createGroup("customer-ten", 3, 10));
         stubFor(this.createGroup("engagement-ten", 10, 11));
