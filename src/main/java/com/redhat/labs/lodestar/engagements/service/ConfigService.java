@@ -2,6 +2,7 @@ package com.redhat.labs.lodestar.engagements.service;
 
 import com.redhat.labs.lodestar.engagements.model.HookConfig;
 import com.redhat.labs.lodestar.engagements.rest.client.ConfigApiClient;
+
 import io.vertx.mutiny.core.eventbus.EventBus;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.javers.core.Javers;
@@ -15,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -71,5 +72,9 @@ public class ConfigService {
         }
 
         return webhooks;
+    }
+
+    public String getRuntimeConfig(String engagementType) {
+        return configApiClient.getRuntimeConfig(engagementType);
     }
 }

@@ -8,6 +8,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import java.util.List;
 
@@ -20,4 +21,9 @@ public interface ConfigApiClient {
     @GET
     @Path("webhooks")
     List<HookConfig> getWebhooks();
+
+    @GET
+    @Path("runtime")
+    String getRuntimeConfig(@QueryParam("type") String type);
+
 }
