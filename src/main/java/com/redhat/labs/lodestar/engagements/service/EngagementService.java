@@ -206,9 +206,12 @@ public class EngagementService {
         bus.publish(DELETE_ENGAGEMENT, engagement);
     }
 
-    public Map<EngagementState, Integer> getEngagementCountByStatus(Instant currentTime) {
+    public Map<EngagementState, Integer> getEngagementCountByStatus(Instant currentTime, Set<String> regions) {
 
-        List<Engagement> engagementList = getEngagements();
+
+        List<Engagement> engagementList = regions.isEmpty() ? getEngagements() :
+            getEngagements(PageFilter.builder().page(0).pageSize(1000).build(), regions);
+
         Map<EngagementState, Integer> statusCounts = new EnumMap<>(EngagementState.class);
 
         for (Engagement engagement : engagementList) {

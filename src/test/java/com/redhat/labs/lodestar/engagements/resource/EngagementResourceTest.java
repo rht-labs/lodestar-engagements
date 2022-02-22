@@ -187,7 +187,7 @@ class EngagementResourceTest {
                 .startDate(startDate).endDate(endDate).archiveDate(archiveDate).launch(launch).build();
         engagementService.create(engagement);
 
-        engagement = Engagement.builder().name("DO503").customerName("Fish Gym").region("na").type("Residency")
+        engagement = Engagement.builder().name("DO503").customerName("Fish Gym").region("emea").type("Residency")
                 .startDate(startDate).endDate(endDate).launch(launch).build();
         engagementService.create(engagement);
 
@@ -202,6 +202,11 @@ class EngagementResourceTest {
                 .body("UPCOMING", equalTo(2))
                 .body("ACTIVE", equalTo(4))
                 .body("ANY", equalTo(6));
+
+        given().queryParam("time", Instant.EPOCH.toString()).queryParam("region", "na").when().get("count").then().statusCode(200)
+                .body("UPCOMING", equalTo(2))
+                .body("ACTIVE", equalTo(3))
+                .body("ANY", equalTo(5));
 
     }
 
