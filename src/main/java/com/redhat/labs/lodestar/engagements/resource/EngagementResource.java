@@ -199,7 +199,7 @@ public class EngagementResource {
 
     @GET
     @Path("count")
-    public Response getCountByStatus(@QueryParam("time") String time) {
+    public Response getCountByStatus(@QueryParam("time") String time, @QueryParam("region") Set<String> regions) {
 
         Instant compare = Instant.now();
 
@@ -207,7 +207,7 @@ public class EngagementResource {
             compare = Instant.parse(time);
         }
 
-        return Response.ok(engagementService.getEngagementCountByStatus(compare)).build();
+        return Response.ok(engagementService.getEngagementCountByStatus(compare, regions)).build();
     }
 
     @HEAD
