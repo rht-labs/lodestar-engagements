@@ -1,8 +1,6 @@
 package com.redhat.labs.lodestar.engagements.resource;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -66,6 +64,11 @@ public class CategoryResource {
     @Path("suggest")
     @Operation(summary = "Suggest categories based on input.")
     public Set<String> getCategorySuggestions(@DefaultValue("") @QueryParam("partial") String partial) {
+        if(partial == null) {
+            Set<String> cats = new TreeSet<>();
+            categoryService.getCategories(1, 7).forEach(c -> cats.add(c.getName()));
+            return cats;
+        }
         return categoryService.suggestCategory(partial);
     }
     
