@@ -70,12 +70,14 @@ public class GitlabService {
         Project project = gitlabApiClient.createProject(engagement.getUuid(), engagementGroup.getId());
         engagement.setProjectId(project.getId());
 
+        //Placing before commit so that the webhook will fire on commit
+        gitlabApiClient.createWebhooks(engagement.getProjectId(), engagement.getState());
+        gitlabApiClient.activateDeployKey(engagement.getProjectId());
+
+        LOGGER.debug("hooks created");
         String legacy = this.createLegacyJson(engagement);
         gitlabApiClient.createEngagementFiles(engagement, legacy);
         engagementService.update(engagement, false);
-
-        gitlabApiClient.createWebhooks(engagement.getProjectId(), engagement.getState());
-        gitlabApiClient.activateDeployKey(engagement.getProjectId());
 
         LOGGER.debug("creation complete {}", engagement);
     }
