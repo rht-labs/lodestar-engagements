@@ -17,7 +17,6 @@ import org.gitlab4j.api.models.Commit;
 import org.gitlab4j.api.models.CommitAction;
 import org.gitlab4j.api.models.CommitAction.Action;
 import org.gitlab4j.api.models.CommitPayload;
-import org.gitlab4j.api.models.DeployKey;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.GroupParams;
 import org.gitlab4j.api.models.GroupProjectsFilter;
@@ -373,11 +372,11 @@ public class GitlabApiClient {
     
     public void activateDeployKey(Integer projectId) {
         try {
-            DeployKey key = gitlabApi.getDeployKeysApi().enableDeployKey(projectId, deployKey);
+            gitlabApi.getDeployKeysApi().enableDeployKey(projectId, deployKey);
             gitlabApi.getDeployKeysApi().updateDeployKey(projectId , deployKey,
                     String.format("%s %s %s",DEPLOYMENT_KEY_PREFIX, environment, DEPLOYMENT_KEY_POSTFIX), true);
         } catch (GitLabApiException e) {
-            //A notification should be sent here. This won't error out the process but it should reconcile
+            //A notification should be sent here. This won't error out the process, but it should reconcile
             LOGGER.error(String.format("Failed to activate deploy key for project %d Status(%d) Reason(%s)", projectId,
                     e.getHttpStatus(), e.getReason()));
         }

@@ -20,7 +20,8 @@ import static com.mongodb.client.model.Aggregates.skip;
 @AllArgsConstructor
 public class PageFilter {
 
-    private Sort defaultSort = Sort.by("last_updated", Sort.Direction.Descending).and("uuid");
+    @Builder.Default
+    private Sort defaultSort = Sort.by("lastUpdate", Sort.Direction.Descending).and("uuid");
 
     @DefaultValue("0")
     @Parameter(description = "page number of results to return")
@@ -59,6 +60,10 @@ public class PageFilter {
 
         for (String s : sortAll) {
             String[] sortFields = s.split("\\|");
+
+            if("projectName".equals(sortFields[0])) { //legacy naming on FE
+                sortFields[0] = "name";
+            }
             direction = sortFields.length == 2 ? sortFields[1] : "";
             if (querySort == null) {
                 querySort = Sort.by(sortFields[0], getDirection(direction));
@@ -75,7 +80,7 @@ public class PageFilter {
     }
 
     private Sort.Direction getDirection(String dir) {
-        if("DESC".equals(dir)) {
+        if("DESC".equalsIgnoreCase(dir)) {
             return Sort.Direction.Descending;
         }
 

@@ -38,14 +38,20 @@ public class EngagementResource {
     EngagementService engagementService;
     
     @GET
-    public Response getEngagements(@BeanParam PageFilter pagingFilter, @QueryParam("region") Set<String> region) {
-        if(region.isEmpty()) { //no sorting yet
+    public Response getEngagements(@BeanParam PageFilter pagingFilter, @QueryParam("region") Set<String> region,
+               @QueryParam("types") Set<String> types, @QueryParam("inStates") Set<EngagementState> states) {
+
+        if(region.isEmpty() && types.isEmpty()) {
             List<Engagement> engagements = engagementService.getEngagements(pagingFilter);
+
+            if(!states.isEmpty()) {
+                engagements = engagementService.filterEngagementsByState(engagements, states);
+            }
             return Response.ok(engagements).header(TOTAL_HEADER, engagementService.countAll()).build();
         }
 
-        List<Engagement> engagements = engagementService.getEngagements(pagingFilter, region);
-        return Response.ok(engagements).header(TOTAL_HEADER, engagementService.countRegions(region)).build();
+        List<Engagement> engagements = engagementService.getEngagements(pagingFilter, region, types, states);
+        return Response.ok(engagements).header(TOTAL_HEADER, engagementService.count(region, types, states)).build();
     }
     @GET
     @Path("inStates")
@@ -60,8 +66,10 @@ public class EngagementResource {
     
     @GET
     @Path("category/{category}")
-    public Response getEngagementWithCategory(@PathParam("category") String category) {
-        List<Engagement> engagements = engagementService.getEngagementsWithCategory(category);
+    @Operation(summary = "Gets a list of engagements that have use the category input.")
+    public Response getEngagementWithCategory(@PathParam("category") String category, @BeanParam PageFilter pagingFilter,
+              @QueryParam("region") Set<String> region, @QueryParam("types") Set<String> types, @QueryParam("inStates") Set<EngagementState> states                            ) {
+        List<Engagement> engagements = engagementService.getEngagementsWithCategory(category, pagingFilter, region, types, states);
         return Response.ok(engagements).header(TOTAL_HEADER, engagements.size()).build();
     }
     
@@ -207,7 +215,7 @@ public class EngagementResource {
             compare = Instant.parse(time);
         }
 
-        return Response.ok(engagementService.getEngagementCountByStatus(compare, regions)).build();
+        return Response.ok(engagementService.getEngagementCountByStatus(compare, regions, Collections.emptySet())).build();
     }
 
     @HEAD

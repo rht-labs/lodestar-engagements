@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response.Status;
 
+import com.redhat.labs.lodestar.engagements.model.EngagementState;
 import com.redhat.labs.lodestar.engagements.model.UseCase;
 import com.redhat.labs.lodestar.engagements.service.GitlabService;
 import io.quarkus.test.junit.mockito.InjectSpy;
@@ -29,6 +30,7 @@ import org.mockito.Mockito;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 
 @QuarkusTest
@@ -98,6 +100,34 @@ class EngagementResourceTest {
     }
 
     @Test
+    void testGetEngagementsForTypeRegionAndState() {
+        engagementService.create(Engagement.builder().name("unit test").customerName("blue hat").region("latam").type("Residency").build());
+
+        given().queryParam("inStates", EngagementState.UPCOMING)
+                .queryParam("region", "na")
+                .queryParam("type", "Residency")
+                .when().get()
+                .then().statusCode(200).body("size()", equalTo(2))
+                .body("[0].region", equalTo("na"))
+                .body("[0].type", equalTo("do500"));
+
+        given().queryParam("inStates", EngagementState.UPCOMING)
+                .queryParam("region", "latam")
+                .queryParam("type", "DO500")
+                .when().get()
+                .then().statusCode(200).body("size()", equalTo(1))
+                .body("[0].region", equalTo("latam"))
+                .body("[0].type", equalTo("Residency"));
+
+        given().queryParam("inStates", EngagementState.UPCOMING)
+                .when().get()
+                .then().statusCode(200).body("size()", equalTo(3))
+                .body("[0].state", equalTo("UPCOMING"))
+                .body("[1].state", equalTo("UPCOMING"))
+                .body("[2].state", equalTo("UPCOMING"));
+    }
+
+    @Test
     void testGetPagedEngagements() {
         int page = 0;
         int pageSize = 1;
@@ -114,6 +144,19 @@ class EngagementResourceTest {
                 .when().get().then().statusCode(200).header("x-total-engagements", equalTo("2")).body("size()", equalTo(1));
 
         given().queryParam("page", page).queryParam("pageSize", pageSize).queryParam("region", "latam")
+                .queryParam("sort", "name")
+                .when().get().then().statusCode(200).header("x-total-engagements", equalTo("0")).body("size()", equalTo(0));
+    }
+
+    @Test
+    void testGetPagedEngagementsForType() {
+        int page = 0;
+        int pageSize = 1;
+        given().queryParam("page", page).queryParam("pageSize", pageSize).queryParam("types", "do500")
+                .queryParam("sort", "name|DESC")
+                .when().get().then().statusCode(200).header("x-total-engagements", equalTo("2")).body("size()", equalTo(1));
+
+        given().queryParam("page", page).queryParam("pageSize", pageSize).queryParam("types", "OpenLeadership")
                 .queryParam("sort", "name")
                 .when().get().then().statusCode(200).header("x-total-engagements", equalTo("0")).body("size()", equalTo(0));
     }
@@ -420,7 +463,12 @@ class EngagementResourceTest {
 
     @Test
     void testGetWithCategory() {
+        List<Engagement> e = engagementService.getEngagements();
+        e.forEach(eng -> {
+            System.out.println("-->" + eng.getName());
+            System.out.println(eng.getCategories());
+        });
         given().pathParam("category", "philanthropy").when().get("category/{category}")
-                .then().statusCode(200).body("size", equalTo(2)).header("x-total-engagements", equalTo("2"));
+                .then().statusCode(200).body("size()", equalTo(2)).header("x-total-engagements", equalTo("2"));
     }
 }
