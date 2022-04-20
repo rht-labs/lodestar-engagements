@@ -464,10 +464,6 @@ class EngagementResourceTest {
     @Test
     void testGetWithCategory() {
         List<Engagement> e = engagementService.getEngagements();
-        e.forEach(eng -> {
-            System.out.println("-->" + eng.getName());
-            System.out.println(eng.getCategories());
-        });
         given().pathParam("category", "philanthropy").when().get("category/{category}")
                 .then().statusCode(200).body("size()", equalTo(2)).header("x-total-engagements", equalTo("2"));
     }
