@@ -39,19 +39,19 @@ public class EngagementResource {
     
     @GET
     public Response getEngagements(@BeanParam PageFilter pagingFilter, @QueryParam("region") Set<String> region,
-               @QueryParam("types") Set<String> types, @QueryParam("inStates") Set<EngagementState> states) {
+               @QueryParam("types") Set<String> types, @QueryParam("inStates") Set<EngagementState> states,
+               @QueryParam("q") String search, @QueryParam("category") String category) {
 
-        if(region.isEmpty() && types.isEmpty()) {
-            List<Engagement> engagements = engagementService.getEngagements(pagingFilter);
-
-            if(!states.isEmpty()) {
-                engagements = engagementService.filterEngagementsByState(engagements, states);
-            }
-            return Response.ok(engagements).header(TOTAL_HEADER, engagementService.countAll()).build();
+        List<Engagement> engagements;
+        long total = 0;
+        if(search == null && category == null && region.isEmpty() && types.isEmpty()) {
+            engagements = engagementService.getEngagements(states); //System should calc state daily (it doesn't)
+            total = engagements.size();
+        } else {
+            engagements = engagementService.findEngagements(pagingFilter, search, category, region, types, states);
+            total = engagementService.countEngagements(search, category, region, types);
         }
-
-        List<Engagement> engagements = engagementService.getEngagements(pagingFilter, region, types, states);
-        return Response.ok(engagements).header(TOTAL_HEADER, engagementService.count(region, types, states)).build();
+        return Response.ok(engagements).header(TOTAL_HEADER, total).build(); //no paging yet
     }
     @GET
     @Path("inStates")

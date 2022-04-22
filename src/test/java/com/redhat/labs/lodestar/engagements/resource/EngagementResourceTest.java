@@ -130,9 +130,9 @@ class EngagementResourceTest {
     @Test
     void testGetPagedEngagements() {
         int page = 0;
-        int pageSize = 1;
+        int pageSize = 2;
         given().queryParam("page", page).queryParam("pageSize", pageSize)
-                .when().get().then().statusCode(200).header("x-total-engagements", equalTo("2")).body("size()", equalTo(1));
+                .when().get().then().statusCode(200).header("x-total-engagements", equalTo("2")).body("size()", equalTo(2));
     }
 
     @Test

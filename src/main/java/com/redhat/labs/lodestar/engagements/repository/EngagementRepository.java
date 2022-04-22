@@ -5,12 +5,16 @@ import static com.mongodb.client.model.Aggregates.match;
 import static com.mongodb.client.model.Aggregates.replaceRoot;
 import static com.mongodb.client.model.Aggregates.sort;
 import static com.mongodb.client.model.Aggregates.unwind;
+import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.in;
+import static com.mongodb.client.model.Filters.or;
 import static com.mongodb.client.model.Filters.regex;
 import static com.mongodb.client.model.Sorts.descending;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import javax.enterprise.context.ApplicationScoped;
 
@@ -26,6 +30,7 @@ import io.quarkus.mongodb.panache.PanacheMongoRepository;
 
 @ApplicationScoped
 public class EngagementRepository implements PanacheMongoRepository<Engagement> {
+
     private static final String REGION = "region in :region";
     private static final String TYPE = "'type' in :engagementType";
     private static final String CATEGORY = "categories = :category";
@@ -51,6 +56,44 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
 
         return find(query, pageFilter.getPanacheSort(), params)
                 .page(pageFilter.getPage(), pageFilter.getPageSize()).list();
+    }
+
+    public long countEngagements(String searchInput, String category, Set<String> regions, Set<String> types) {
+        Bson finalQuery = createQuery(searchInput, category, regions, types);
+        return mongoCollection().countDocuments(finalQuery);
+    }
+
+    public List<Engagement> findEngagements(PageFilter pageFilter, String searchInput, String category, Set<String> regions, Set<String> types) {
+
+        Bson finalQuery = createQuery(searchInput, category, regions, types);
+
+        return mongoCollection().find(finalQuery).sort(pageFilter.getBsonSort()).skip(pageFilter.getStartAt()).limit(pageFilter.getPageSize()).into(new ArrayList<>());
+    }
+
+    private Bson createQuery(String searchInput, String category, Set<String> regions, Set<String> types) {
+        List<Bson> ands = new ArrayList<>();
+
+        if(searchInput != null) {
+            Pattern p = Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE);
+            Bson query = or(
+                    regex("customerName", p),
+                    regex("name", p));
+            ands.add(query);
+        }
+
+        if(category != null) {
+            ands.add(in("categories", category));
+        }
+
+        if(!regions.isEmpty()) {
+            ands.add(in("region", regions));
+        }
+
+        if(!types.isEmpty()) {
+            ands.add(in("type", types));
+        }
+
+        return and(ands);
     }
 
     public List<Engagement> findEngagementsWithoutLastUpdate() {
@@ -151,6 +194,8 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
 
     public Optional<Engagement> getByCustomerAndEngagementName(String customerName, String engagementName) {
         return find("customerName = ?1 and name = ?2", customerName, engagementName).singleResultOptional();
+
+
     }
     /**
      * Applies - distinct, like, sort

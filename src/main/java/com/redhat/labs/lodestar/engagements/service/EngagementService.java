@@ -244,12 +244,31 @@ public class EngagementService {
 
     }
 
+    public long countEngagements(String input, String category, Set<String> regions, Set<String> types) {
+        return engagementRepository.countEngagements(input, category, regions, types);
+    }
+
+    public List<Engagement> findEngagements(PageFilter pageFilter, String input, String category, Set<String> regions, Set<String> types, Set<EngagementState> states) {
+        List<Engagement> engagements =  engagementRepository.findEngagements(pageFilter, input, category, regions, types);
+
+        if(states.isEmpty()) {
+            return engagements;
+        }
+
+        return filterEngagementsByState(engagements, states);
+    }
+
     public List<Engagement> filterEngagementsByState(List<Engagement> engagements, Set<EngagementState> states) {
         return engagements.stream().filter(e -> states.contains(e.getState())).collect(Collectors.toList());
     }
 
     public List<Engagement> getEngagements(Set<EngagementState> states) {
-        return filterEngagementsByState(getEngagements(), states);
+        List<Engagement> engagements = getEngagements();
+
+        if(states.isEmpty()) {
+            return engagements;
+        }
+        return filterEngagementsByState(engagements, states);
     }
 
     public long countAll() {
