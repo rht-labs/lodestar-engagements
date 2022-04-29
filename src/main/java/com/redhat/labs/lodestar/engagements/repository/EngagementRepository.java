@@ -5,20 +5,19 @@ import static com.mongodb.client.model.Aggregates.match;
 import static com.mongodb.client.model.Aggregates.replaceRoot;
 import static com.mongodb.client.model.Aggregates.sort;
 import static com.mongodb.client.model.Aggregates.unwind;
+import static com.mongodb.client.model.Filters.and;
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Filters.in;
+import static com.mongodb.client.model.Filters.or;
 import static com.mongodb.client.model.Filters.regex;
 import static com.mongodb.client.model.Sorts.descending;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.TreeSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import javax.enterprise.context.ApplicationScoped;
 
-import io.quarkus.panache.common.Sort;
 import org.bson.conversions.Bson;
 
 import com.mongodb.client.model.Field;
@@ -32,22 +31,104 @@ import io.quarkus.mongodb.panache.PanacheMongoRepository;
 @ApplicationScoped
 public class EngagementRepository implements PanacheMongoRepository<Engagement> {
 
+    private static final String REGION = "region in :region";
+    private static final String TYPE = "'type' in :engagementType";
+    private static final String CATEGORY = "categories = :category";
+
     public List<Engagement> getEngagements(PageFilter pageFilter) {
-        return findAll(Sort.by("lastUpdate", Sort.Direction.Descending))
+        return findAll(pageFilter.getPanacheSort())
                 .page(pageFilter.getPage(), pageFilter.getPageSize()).list();
     }
 
-    public List<Engagement> getEngagements(PageFilter pageFilter, Set<String> regions) {
-        return find("region in ?1", pageFilter.getPanacheSort(), regions)
+    public List<Engagement> getEngagements(PageFilter pageFilter, Set<String> regions, Set<String> types) {
+        String query = "";
+        Map<String, Object> params = new HashMap<>();
+
+        if(regions.size() > 0) {
+            query = REGION;
+            params.put("region", regions);
+        }
+
+        if(types.size() > 0) {
+            query = query.length() > 0 ? query + " and " + TYPE : TYPE;
+            params.put("engagementType", types);
+        }
+
+        return find(query, pageFilter.getPanacheSort(), params)
                 .page(pageFilter.getPage(), pageFilter.getPageSize()).list();
+    }
+
+    public long countEngagements(String searchInput, String category, Set<String> regions, Set<String> types) {
+        Bson finalQuery = createQuery(searchInput, category, regions, types);
+        return mongoCollection().countDocuments(finalQuery);
+    }
+
+    public List<Engagement> findEngagements(PageFilter pageFilter, String searchInput, String category, Set<String> regions, Set<String> types) {
+
+        Bson finalQuery = createQuery(searchInput, category, regions, types);
+
+        return mongoCollection().find(finalQuery).sort(pageFilter.getBsonSort()).skip(pageFilter.getStartAt()).limit(pageFilter.getPageSize()).into(new ArrayList<>());
+    }
+
+    private Bson createQuery(String searchInput, String category, Set<String> regions, Set<String> types) {
+        List<Bson> ands = new ArrayList<>();
+
+        if(searchInput != null) {
+            Pattern p = Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE);
+            Bson query = or(
+                    regex("customerName", p),
+                    regex("name", p));
+            ands.add(query);
+        }
+
+        if(category != null) {
+            ands.add(in("categories", category));
+        }
+
+        if(!regions.isEmpty()) {
+            ands.add(in("region", regions));
+        }
+
+        if(!types.isEmpty()) {
+            ands.add(in("type", types));
+        }
+
+        return and(ands);
     }
 
     public List<Engagement> findEngagementsWithoutLastUpdate() {
         return list("lastUpdate is null");
     }
 
-    public long countEngagements(Set<String> regions) {
-        return count("region in ?1", regions);
+    public long countEngagements(Set<String> regions, Set<String> types) {
+        Query query = queryEngagements(regions, types);
+        return count(query.value, query.parameters);
+    }
+
+    private Query queryEngagements(Set<String> regions, Set<String> types) {
+        return queryEngagements(regions, types, null);
+    }
+
+    private Query queryEngagements(Set<String> regions, Set<String> types, String category) {
+        String query = "";
+        Map<String, Object> params = new HashMap<>();
+
+        if(regions.size() > 0) {
+            query = REGION;
+            params.put("region", regions);
+        }
+
+        if(category != null) {
+            query = query.length() > 0 ? query + " and " + CATEGORY : CATEGORY;
+            params.put("category", category);
+        }
+
+        if(types.size() > 0) {
+            query = query.length() > 0 ? query + " and " + TYPE : TYPE;
+            params.put("engagementType", types);
+        }
+
+        return new Query(query, params);
     }
     
     /**
@@ -97,12 +178,10 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
         return Optional.empty();
     }
     
-    public List<Engagement> getEngagementsWithCategory(String category) {
-        return find("categories = ?1", category).list();
-    }
-
-    public List<Engagement> getEngagements(Set<String> uuids) {
-        return list("uuid in ?1", uuids);
+    public List<Engagement> getEngagementsWithCategory(String category, PageFilter pageFilter, Set<String> regions, Set<String> types) {
+        Query q = queryEngagements(regions, types, category);
+        return find(q.value, pageFilter.getPanacheSort(), q.parameters)
+                .page(pageFilter.getPage(), pageFilter.getPageSize()).list();
     }
 
     public Optional<Engagement> getEngagement(String uuid) {
@@ -115,6 +194,8 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
 
     public Optional<Engagement> getByCustomerAndEngagementName(String customerName, String engagementName) {
         return find("customerName = ?1 and name = ?2", customerName, engagementName).singleResultOptional();
+
+
     }
     /**
      * Applies - distinct, like, sort

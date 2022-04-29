@@ -206,11 +206,11 @@ public class EngagementService {
         bus.publish(DELETE_ENGAGEMENT, engagement);
     }
 
-    public Map<EngagementState, Integer> getEngagementCountByStatus(Instant currentTime, Set<String> regions) {
+    public Map<EngagementState, Integer> getEngagementCountByStatus(Instant currentTime, Set<String> regions, Set<String> types) {
 
 
         List<Engagement> engagementList = regions.isEmpty() ? getEngagements() :
-            getEngagements(PageFilter.builder().page(0).pageSize(1000).build(), regions);
+            getEngagements(PageFilter.builder().page(0).pageSize(1000).build(), regions, types, Collections.emptySet());
 
         Map<EngagementState, Integer> statusCounts = new EnumMap<>(EngagementState.class);
 
@@ -234,24 +234,66 @@ public class EngagementService {
         return engagementRepository.getEngagements(pageFilter);
     }
 
-    public List<Engagement> getEngagements(PageFilter pageFilter, Set<String> regions) {
-        return engagementRepository.getEngagements(pageFilter, regions);
+    public List<Engagement> getEngagements(PageFilter pageFilter, Set<String> regions, Set<String> types, Set<EngagementState> inStates) {
+        List<Engagement> engagements = engagementRepository.getEngagements(pageFilter, regions, types);
+        if(inStates.isEmpty()) {
+            return engagements;
+        }
+
+        return filterEngagementsByState(engagements, inStates);
+
+    }
+
+    public long countEngagements(String input, String category, Set<String> regions, Set<String> types) {
+        return engagementRepository.countEngagements(input, category, regions, types);
+    }
+
+    public List<Engagement> findEngagements(PageFilter pageFilter, String input, String category, Set<String> regions, Set<String> types, Set<EngagementState> states) {
+        List<Engagement> engagements =  engagementRepository.findEngagements(pageFilter, input, category, regions, types);
+
+        if(states.isEmpty()) {
+            return engagements;
+        }
+
+        return filterEngagementsByState(engagements, states);
+    }
+
+    public List<Engagement> filterEngagementsByState(List<Engagement> engagements, Set<EngagementState> states) {
+        return engagements.stream().filter(e -> states.contains(e.getState())).collect(Collectors.toList());
     }
 
     public List<Engagement> getEngagements(Set<EngagementState> states) {
-        return getEngagements().stream().filter(e -> states.contains(e.getState())).collect(Collectors.toList());
+        List<Engagement> engagements = getEngagements();
+
+        if(states.isEmpty()) {
+            return engagements;
+        }
+        return filterEngagementsByState(engagements, states);
     }
 
     public long countAll() {
         return engagementRepository.count();
     }
 
-    public long countRegions(Set<String> regions) {
-        return engagementRepository.countEngagements(regions);
+    public long count(Set<String> regions, Set<String> types, Set<EngagementState> inStates) {
+        if(inStates.isEmpty()) {
+            return engagementRepository.countEngagements(regions, types);
+        }
+
+        return getEngagements(PageFilter.builder().page(0).pageSize(1000).build(), regions, types, inStates).size();
+    }
+
+    public long countRegions(Set<String> regions, Set<String> types) {
+        return engagementRepository.countEngagements(regions, types);
     }
     
-    public List<Engagement> getEngagementsWithCategory(String category) {
-        return engagementRepository.getEngagementsWithCategory(category);
+    public List<Engagement> getEngagementsWithCategory(String category, PageFilter pageFilter, Set<String> regions, Set<String> types, Set<EngagementState> inStates) {
+        List<Engagement> engagements = engagementRepository.getEngagementsWithCategory(category, pageFilter, regions, types);
+        if(inStates.isEmpty()) {
+            return engagements;
+        }
+
+        return filterEngagementsByState(engagements, inStates);
     }
 
 

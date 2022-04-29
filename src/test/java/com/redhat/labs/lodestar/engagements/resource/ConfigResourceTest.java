@@ -31,7 +31,7 @@ class ConfigResourceTest {
     void testGetWebhooksService() {
         HookConfig.deleteAll();
         //from service
-        given().when().get().then().statusCode(200).header("x-total-webhooks", equalTo("3")).body("size", equalTo(3));
+        given().when().get().then().statusCode(200).header("x-total-webhooks", equalTo("3")).body("size()", equalTo(3));
 
     }
 
@@ -45,7 +45,7 @@ class ConfigResourceTest {
         HookConfig.persist(webhooks);
 
         //from db
-        given().when().get().then().statusCode(200).header("x-total-webhooks", equalTo("3")).body("size", equalTo(3));
+        given().when().get().then().statusCode(200).header("x-total-webhooks", equalTo("3")).body("size()", equalTo(3));
     }
 
     @Test
