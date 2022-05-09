@@ -97,4 +97,5 @@ class GitlabServiceTest {
         assertTrue(option.isPresent());
         assertTrue(engagement.getLastMessage().startsWith("Summary Update"));
     }
+
 }

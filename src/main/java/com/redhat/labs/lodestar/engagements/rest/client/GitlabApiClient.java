@@ -73,6 +73,12 @@ public class GitlabApiClient {
     
     @ConfigProperty(name = "gitlab.dir")
     String dataDir;
+
+    @ConfigProperty(name = "lodestar.tag")
+    String lodestarTag;
+
+    @ConfigProperty(name = "lodestar.tag.format")
+    String lodestarTagFormat;
     
     @ConfigProperty(name = "seed.file.list")
     List<String> seedFileList;
@@ -353,10 +359,19 @@ public class GitlabApiClient {
                 .withJobsEnabled(false)
                 .withLfsEnabled(false)
                 .withMergeRequestsEnabled(false)
-                .withPackagesEnabled(false);
-        
+                .withPackagesEnabled(false)
+                .withTagList(List.of(lodestarTag, String.format(lodestarTagFormat, EngagementState.UPCOMING)));
+
         try {
             return gitlabApi.getProjectApi().createProject(newProject);
+        } catch (GitLabApiException e) {
+            throw new EngagementGitlabException(e.getHttpStatus(), e.getReason());
+        }
+    }
+
+    public Project updateProject(Project project) {
+        try {
+            return gitlabApi.getProjectApi().updateProject(project);
         } catch (GitLabApiException e) {
             throw new EngagementGitlabException(e.getHttpStatus(), e.getReason());
         }
