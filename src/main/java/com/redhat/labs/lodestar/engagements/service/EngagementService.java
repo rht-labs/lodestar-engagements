@@ -35,6 +35,7 @@ public class EngagementService {
     public static final String UPDATE_ENGAGEMENT = "update.engagement.event";
     public static final String CREATE_ENGAGEMENT = "create.engagement.event";
     public static final String DELETE_ENGAGEMENT = "delete.engagement.event";
+    public static final String UPDATE_STATUS = "update.status.engagement.event";
     public static final String LAUNCH_MESSAGE = "\uD83D\uDEA2 \uD83C\uDFF4\u200D☠️ \uD83D\uDE80";
     
     @Inject
@@ -76,6 +77,24 @@ public class EngagementService {
         if(count == 0) {
             LOGGER.info("No engagements found. Initiating refresh");
             refresh();
+        }
+    }
+
+    @Scheduled(every="643m", delayed = "30s")
+    void updateStatusTimer() {
+        LOGGER.debug("Updating states");
+        List<Engagement> changedEngagements = new ArrayList<>();
+        engagementRepository.findAll().stream().forEach(e -> {
+            if(e.getCurrentState() == null || e.getCurrentState() != e.getState()) {
+                e.setCurrentState(e.getState());
+                changedEngagements.add(e);
+                bus.publish(UPDATE_STATUS, e);
+            }
+        });
+
+        if(!changedEngagements.isEmpty()) {
+            LOGGER.debug("Updating {} states ", changedEngagements.size());
+            engagementRepository.update(changedEngagements);
         }
     }
 

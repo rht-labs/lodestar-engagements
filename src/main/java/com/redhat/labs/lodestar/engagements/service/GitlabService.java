@@ -7,7 +7,6 @@ import javax.inject.Inject;
 
 import com.google.gson.*;
 import com.redhat.labs.lodestar.engagements.utils.JsonMarshaller;
-import io.quarkus.qute.Template;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.gitlab4j.api.models.Group;
 import org.gitlab4j.api.models.Project;
@@ -38,13 +37,14 @@ public class GitlabService {
     @Inject
     JsonMarshaller json;
 
-    // Template to retrofit the data back to v1 for orchestration
-    // Burn after upgrade
-    @Inject
-    Template engagement;
-
     @ConfigProperty(name = "disable.refresh.bus")
     boolean disableBus;
+
+    @ConfigProperty(name = "lodestar.tag")
+    String lodestarTag;
+
+    @ConfigProperty(name = "lodestar.tag.format")
+    String lodestarTagFormat;
 
     Gson gson = new GsonBuilder().setPrettyPrinting().create();
     
@@ -157,6 +157,33 @@ public class GitlabService {
         LOGGER.debug("{}", message);
         List<Engagement> engagements = engagementService.getEngagements();
         engagements.forEach(this::updateWebhook);
+    }
+
+    @ConsumeEvent(value = EngagementService.UPDATE_STATUS, blocking = true)
+    public void updateStatus(Engagement engagement) {
+        Optional<Project> p = gitlabApiClient.getProject(engagement.getProjectId());
+        if(p.isPresent()) {
+            boolean isSet = false;
+            List<String> tags = p.get().getTagList();
+            String stateTag = String.format(lodestarTagFormat, engagement.getCurrentState());
+
+            for(int i=0; i<tags.size(); i++) {
+                if(tags.get(i).equals(stateTag)) {
+                    tags.set(i, stateTag);
+                    isSet = true;
+                }
+            }
+
+            if(!tags.contains(lodestarTag)) {
+                tags.add(lodestarTag);
+            }
+
+            if(!isSet) {
+                tags.add(stateTag);
+            }
+
+            gitlabApiClient.updateProject(p.get());
+        }
     }
 
     public void refreshCategories() {

@@ -79,6 +79,8 @@ public class Engagement {
     private Instant createdDate;
     private Instant lastUpdate;
 
+    private EngagementState currentState;
+
     @Builder.Default
     private Integer participantCount = 0;
     @Builder.Default

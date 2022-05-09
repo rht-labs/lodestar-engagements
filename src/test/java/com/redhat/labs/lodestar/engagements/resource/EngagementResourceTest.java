@@ -464,7 +464,7 @@ class EngagementResourceTest {
     @Test
     void testGetWithCategory() {
         List<Engagement> e = engagementService.getEngagements();
-        given().pathParam("category", "philanthropy").when().get("category/{category}")
+        given().pathParam("category", "philanthropy").queryParam("sort", "name|desc,customerName").when().get("category/{category}")
                 .then().statusCode(200).body("size()", equalTo(2)).header("x-total-engagements", equalTo("2"));
     }
 }
