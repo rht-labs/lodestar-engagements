@@ -80,7 +80,7 @@ public class EngagementService {
         }
     }
 
-    @Scheduled(every="643m", delayed = "30s")
+    @Scheduled(cron = "{cron.status}")
     void updateStatusTimer() {
         LOGGER.debug("Updating states");
         List<Engagement> changedEngagements = new ArrayList<>();
