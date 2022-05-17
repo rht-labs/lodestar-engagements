@@ -47,6 +47,21 @@ class EngagementServiceTest {
     }
 
     @Test
+    void testLastUpdate() {
+        engagementService.checkLastUpdate();
+
+        List<Engagement> engagements = engagementService.getEngagements();
+        Engagement engagement = engagements.iterator().next();
+        String uuid = engagement.getUuid();
+        engagement.setLastUpdate(null);
+        repository.update(engagement);
+
+        engagementService.checkLastUpdate();
+        engagement = engagementService.getEngagement(uuid).orElse(null);
+        assertTrue(engagement.getLastUpdate() != null);
+    }
+
+    @Test
     void testStatusTimer() {
         String uuid = "status-change";
         Launch l = Launch.builder().launchedBy("Eric").launchedByEmail("eric@redhat.com").launchedDateTime(Instant.now()).build();

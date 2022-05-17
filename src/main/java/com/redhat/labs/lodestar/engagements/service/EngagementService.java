@@ -195,6 +195,12 @@ public class EngagementService {
 
         if (diff.hasChanges() || initialFieldUpdated) {
             updated = true;
+
+            if(engagement.getCurrentState() != engagement.getState()) {
+                engagement.setCurrentState(engagement.getState());
+                bus.publish(UPDATE_STATUS, engagement);
+            }
+
             engagementRepository.update(engagement);
 
             if (updateGitlab) {

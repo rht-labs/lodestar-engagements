@@ -5,7 +5,6 @@ import org.eclipse.microprofile.faulttolerance.*;
 import org.eclipse.microprofile.rest.client.inject.*;
 
 import javax.ws.rs.*;
-import javax.ws.rs.core.*;
 import java.util.*;
 
 @Retry(maxRetries = 5, delay = 1200, retryOn = NoHttpResponseException.class, abortOn = WebApplicationException.class)
