@@ -37,6 +37,7 @@ import java.util.Optional;
 @TestHTTPEndpoint(EngagementResource.class)
 @QuarkusTestResource(ExternalApiWireMock.class)
 class EngagementResourceTest {
+
     private static final String AUTHOR = "Mitch";
     private static final String AUTHOR_EMAIL = "mitch@bucannon.com";
 
@@ -101,7 +102,7 @@ class EngagementResourceTest {
 
     @Test
     void testGetEngagementsForTypeRegionAndState() {
-        engagementService.create(Engagement.builder().name("unit test").customerName("blue hat").region("latam").type("Residency").build());
+        engagementService.create(Engagement.builder().name("unit test").customerName("blue hat").region("latam").type("Residency").currentState(EngagementState.UPCOMING).build());
 
         given().queryParam("inStates", EngagementState.UPCOMING)
                 .queryParam("region", "na")

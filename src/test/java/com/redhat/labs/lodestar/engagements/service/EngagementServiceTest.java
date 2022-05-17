@@ -58,7 +58,8 @@ class EngagementServiceTest {
 
         engagementService.checkLastUpdate();
         engagement = engagementService.getEngagement(uuid).orElse(null);
-        assertTrue(engagement.getLastUpdate() != null);
+        assertNotNull(engagement);
+        assertNotNull(engagement.getLastUpdate());
     }
 
     @Test

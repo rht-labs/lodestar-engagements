@@ -269,18 +269,12 @@ public class EngagementService {
 
     }
 
-    public long countEngagements(String input, String category, Set<String> regions, Set<String> types) {
-        return engagementRepository.countEngagements(input, category, regions, types);
+    public long countEngagements(String input, String category, Set<String> regions, Set<String> types, Set<EngagementState> states) {
+        return engagementRepository.countEngagements(input, category, regions, types, states);
     }
 
     public List<Engagement> findEngagements(PageFilter pageFilter, String input, String category, Set<String> regions, Set<String> types, Set<EngagementState> states) {
-        List<Engagement> engagements =  engagementRepository.findEngagements(pageFilter, input, category, regions, types);
-
-        if(states.isEmpty()) {
-            return engagements;
-        }
-
-        return filterEngagementsByState(engagements, states);
+        return engagementRepository.findEngagements(pageFilter, input, category, regions, types, states);
     }
 
     public List<Engagement> filterEngagementsByState(List<Engagement> engagements, Set<EngagementState> states) {
@@ -288,12 +282,7 @@ public class EngagementService {
     }
 
     public List<Engagement> getEngagements(Set<EngagementState> states) {
-        List<Engagement> engagements = getEngagements();
-
-        if(states.isEmpty()) {
-            return engagements;
-        }
-        return filterEngagementsByState(engagements, states);
+        return getEngagements();
     }
 
     public long countAll() {
@@ -301,15 +290,11 @@ public class EngagementService {
     }
 
     public long count(Set<String> regions, Set<String> types, Set<EngagementState> inStates) {
-        if(inStates.isEmpty()) {
-            return engagementRepository.countEngagements(regions, types);
-        }
-
-        return getEngagements(PageFilter.builder().page(0).pageSize(1000).build(), regions, types, inStates).size();
+        return engagementRepository.countEngagements(regions, types, inStates);
     }
 
     public long countRegions(Set<String> regions, Set<String> types) {
-        return engagementRepository.countEngagements(regions, types);
+        return engagementRepository.countEngagements(regions, types, Collections.emptySet());
     }
     
     public List<Engagement> getEngagementsWithCategory(String category, PageFilter pageFilter, Set<String> regions, Set<String> types, Set<EngagementState> inStates) {
@@ -367,6 +352,7 @@ public class EngagementService {
     public long refresh() {
         LOGGER.debug("Refresh");
         List<Engagement> engagements = gitlabService.getEngagements();
+        engagements.forEach(e -> e.setCurrentState(e.getState()));
         participantService.addEngagementCount(engagements);
         artifactService.addEngagementCount(engagements);
         activityService.getLastActivityPerEngagement(engagements);

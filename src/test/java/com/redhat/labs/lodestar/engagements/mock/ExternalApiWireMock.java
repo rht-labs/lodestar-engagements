@@ -70,6 +70,18 @@ public class ExternalApiWireMock implements QuarkusTestResourceLifecycleManager 
                 .withBody(body)
         ));
 
+        stubFor(get(urlEqualTo("/api/v4/projects/8675309/repository/files/engagement%2Fengagement%2Ejson?ref=master")).willReturn(aResponse()
+                .withStatus(500)
+                .withHeader("Content-Type",  "application/json")
+                .withBody("{\"msg\": \" 500 Something bad happened\"}")
+        ));
+
+        stubFor(get(urlEqualTo("/api/v4/projects/8675308/repository/files/engagement%2Fengagement%2Ejson?ref=master")).willReturn(aResponse()
+                .withStatus(404)
+                .withHeader("Content-Type",  "application/json")
+                .withBody("{\"msg\": \" 500 Something bad happened\"}")
+        ));
+
         stubFor(get(urlEqualTo("/api/v4/projects/12/repository/files/engagement%2Ejson?ref=master")).willReturn(aResponse()
                 .withStatus(200)
                 .withHeader("Content-Type",  "application/json")
