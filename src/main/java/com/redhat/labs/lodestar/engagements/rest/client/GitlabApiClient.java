@@ -43,6 +43,7 @@ public class GitlabApiClient {
     private static final String SUMMARY_MESSAGE = "Summary Update";
     private static final String DEPLOYMENT_KEY_PREFIX = "LodeStar";
     private static final String DEPLOYMENT_KEY_POSTFIX = "DK";
+    private static final String ENGAGEMENT_JSON = "engagement.json";
     
     @ConfigProperty(name = "file.engagement")
     String engagementFile;
@@ -189,11 +190,11 @@ public class GitlabApiClient {
 
     public String getLegacyEngagement(Integer projectId) {
         try {
-            RepositoryFile file = gitlabApi.getRepositoryFileApi().getFile(projectId, "engagement.json", branch);
+            RepositoryFile file = gitlabApi.getRepositoryFileApi().getFile(projectId, ENGAGEMENT_JSON, branch);
             return new String(file.getDecodedContentAsBytes(), StandardCharsets.UTF_8);
         } catch (GitLabApiException e) {
             if(e.getHttpStatus() == 404) {
-                LOGGER.debug("Could find not legacy file {} for project {}", "engagement.json", projectId);
+                LOGGER.debug("Could find not legacy file {} for project {}", ENGAGEMENT_JSON, projectId);
                 return null;
             }
             throw new EngagementGitlabException(e.getHttpStatus(), e.getReason(), "Legacy Engagement File Not Retrieved " + projectId);
@@ -425,7 +426,7 @@ public class GitlabApiClient {
 
          action = new CommitAction()
                 .withAction(Action.CREATE)
-                .withFilePath("engagement.json")
+                .withFilePath(ENGAGEMENT_JSON)
                 .withContent(legacy);
 
         commitFiles.add(action);
@@ -492,7 +493,7 @@ public class GitlabApiClient {
 
         action = new CommitAction()
                 .withAction(Action.UPDATE)
-                .withFilePath("engagement.json")
+                .withFilePath(ENGAGEMENT_JSON)
                 .withContent(legacy);
 
         commitActions.add(action);

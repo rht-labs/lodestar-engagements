@@ -15,9 +15,11 @@ import static com.mongodb.client.model.Sorts.descending;
 import java.time.Instant;
 import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 
+import com.redhat.labs.lodestar.engagements.model.EngagementState;
 import org.bson.conversions.Bson;
 
 import com.mongodb.client.model.Field;
@@ -58,23 +60,23 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
                 .page(pageFilter.getPage(), pageFilter.getPageSize()).list();
     }
 
-    public long countEngagements(String searchInput, String category, Set<String> regions, Set<String> types) {
-        Bson finalQuery = createQuery(searchInput, category, regions, types);
+    public long countEngagements(String searchInput, String category, Set<String> regions, Set<String> types, Set<EngagementState> states) {
+        Bson finalQuery = createQuery(searchInput, category, regions, types, states);
         return mongoCollection().countDocuments(finalQuery);
     }
 
-    public List<Engagement> findEngagements(PageFilter pageFilter, String searchInput, String category, Set<String> regions, Set<String> types) {
+    public List<Engagement> findEngagements(PageFilter pageFilter, String searchInput, String category, Set<String> regions, Set<String> types, Set<EngagementState> states) {
 
-        Bson finalQuery = createQuery(searchInput, category, regions, types);
+        Bson finalQuery = createQuery(searchInput, category, regions, types, states);
 
         return mongoCollection().find(finalQuery).sort(pageFilter.getBsonSort()).skip(pageFilter.getStartAt()).limit(pageFilter.getPageSize()).into(new ArrayList<>());
     }
 
-    private Bson createQuery(String searchInput, String category, Set<String> regions, Set<String> types) {
+    private Bson createQuery(String searchInput, String category, Set<String> regions, Set<String> types, Set<EngagementState> states) {
         List<Bson> ands = new ArrayList<>();
 
         if(searchInput != null) {
-            Pattern p = Pattern.compile(searchInput, Pattern.CASE_INSENSITIVE);
+            Pattern p = Pattern.compile(Pattern.quote(searchInput), Pattern.CASE_INSENSITIVE);
             Bson query = or(
                     regex("customerName", p),
                     regex("name", p));
@@ -93,6 +95,11 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
             ands.add(in("type", types));
         }
 
+        if(!states.isEmpty()) {
+            Set<String> statusValues = states.stream().map(st -> st.toString()).collect(Collectors.toSet());
+            ands.add(in("currentState", statusValues));
+        }
+
         return and(ands);
     }
 
@@ -100,13 +107,9 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
         return list("lastUpdate is null");
     }
 
-    public long countEngagements(Set<String> regions, Set<String> types) {
-        Query query = queryEngagements(regions, types);
-        return count(query.value, query.parameters);
-    }
-
-    private Query queryEngagements(Set<String> regions, Set<String> types) {
-        return queryEngagements(regions, types, null);
+    public long countEngagements(Set<String> regions, Set<String> types, Set<EngagementState> states) {
+        Bson query = createQuery(null, null, regions, types, states);
+        return mongoCollection().countDocuments(query);
     }
 
     private Query queryEngagements(Set<String> regions, Set<String> types, String category) {

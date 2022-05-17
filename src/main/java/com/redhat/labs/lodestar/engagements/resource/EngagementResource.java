@@ -44,12 +44,12 @@ public class EngagementResource {
 
         List<Engagement> engagements;
         long total = 0;
-        if(search == null && category == null && region.isEmpty() && types.isEmpty()) {
-            engagements = engagementService.getEngagements(states); //System should calc state daily (it doesn't)
+        if(search == null && category == null && region.isEmpty() && types.isEmpty() && states.isEmpty()) {
+            engagements = engagementService.getEngagements();
             total = engagements.size();
         } else {
             engagements = engagementService.findEngagements(pagingFilter, search, category, region, types, states);
-            total = engagementService.countEngagements(search, category, region, types);
+            total = engagementService.countEngagements(search, category, region, types, states);
         }
         return Response.ok(engagements).header(TOTAL_HEADER, total).build(); //no paging yet
     }
@@ -59,8 +59,9 @@ public class EngagementResource {
         if(states.isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST).entity(new ErrorMessage("State list is empty")).build();
         }
-        List<Engagement> engagements = engagementService.getEngagements(states);
-        return Response.ok(engagements).header(TOTAL_HEADER, engagements.size()).build();
+        List<Engagement> engagements = engagementService.findEngagements(new PageFilter(), null, null, Collections.emptySet(), Collections.emptySet(), states);
+        long total = engagementService.countEngagements(null, null, Collections.emptySet(), Collections.emptySet(), states);
+        return Response.ok(engagements).header(TOTAL_HEADER, total).build();
     }
 
     
@@ -68,7 +69,7 @@ public class EngagementResource {
     @Path("category/{category}")
     @Operation(summary = "Gets a list of engagements that have use the category input.")
     public Response getEngagementWithCategory(@PathParam("category") String category, @BeanParam PageFilter pagingFilter,
-              @QueryParam("region") Set<String> region, @QueryParam("types") Set<String> types, @QueryParam("inStates") Set<EngagementState> states                            ) {
+              @QueryParam("region") Set<String> region, @QueryParam("types") Set<String> types, @QueryParam("inStates") Set<EngagementState> states) {
         List<Engagement> engagements = engagementService.getEngagementsWithCategory(category, pagingFilter, region, types, states);
         return Response.ok(engagements).header(TOTAL_HEADER, engagements.size()).build();
     }
