@@ -1,6 +1,5 @@
 package com.redhat.labs.lodestar.engagements.utils;
 
-import com.mongodb.client.model.Sorts;
 import io.quarkus.panache.common.Sort;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -74,7 +73,6 @@ public class PageFilter {
             }
             direction = sortFields.length == 2 ? sortFields[1] : "";
             querySort.add(isDescending(direction) ? descending(sortFields[0]) : ascending(sortFields[0]));
-            orderBy(querySort);
         }
 
         querySort.add(ascending("uuid"));

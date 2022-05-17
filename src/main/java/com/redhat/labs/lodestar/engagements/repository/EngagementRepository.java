@@ -44,12 +44,12 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
         String query = "";
         Map<String, Object> params = new HashMap<>();
 
-        if(regions.size() > 0) {
+        if(!regions.isEmpty()) {
             query = REGION;
             params.put("region", regions);
         }
 
-        if(types.size() > 0) {
+        if(!types.isEmpty()) {
             query = query.length() > 0 ? query + " and " + TYPE : TYPE;
             params.put("engagementType", types);
         }
@@ -113,7 +113,7 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
         String query = "";
         Map<String, Object> params = new HashMap<>();
 
-        if(regions.size() > 0) {
+        if(!regions.isEmpty()) {
             query = REGION;
             params.put("region", regions);
         }
@@ -123,7 +123,7 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
             params.put("category", category);
         }
 
-        if(types.size() > 0) {
+        if(!types.isEmpty()) {
             query = query.length() > 0 ? query + " and " + TYPE : TYPE;
             params.put("engagementType", types);
         }

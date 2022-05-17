@@ -247,10 +247,11 @@ public class GitlabApiClient {
                 String content = new String(file.getDecodedContentAsBytes(), StandardCharsets.UTF_8);
                 List<Category> categories = json.fromJson(content, Category.class);
                 if(categories == null) {
-                    LOGGER.error("Category null " + e.getUuid());
+                    LOGGER.error("Category null {}", e.getUuid());
+                } else {
+                    categoryService.refresh(categories);
+                    categoryCount += categories.size();
                 }
-                categoryService.refresh(categories);
-                categoryCount += categories.size();
             } catch (GitLabApiException ex) {
                 if(ex.getHttpStatus() != 404) {
                     throw new EngagementGitlabException(ex.getHttpStatus(), ex.getReason(), "Engagement File Not Retrieved " + e.getProjectId());

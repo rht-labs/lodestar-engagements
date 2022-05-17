@@ -2,10 +2,12 @@ package com.redhat.labs.lodestar.engagements.service;
 
 import java.util.*;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import com.google.gson.*;
+import com.redhat.labs.lodestar.engagements.model.EngagementState;
 import com.redhat.labs.lodestar.engagements.utils.JsonMarshaller;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.gitlab4j.api.models.Group;
@@ -47,6 +49,19 @@ public class GitlabService {
     String lodestarTagFormat;
 
     Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+    List<String> statusPossibilities;
+
+    @PostConstruct
+    void setPossibleStatuses() {
+        statusPossibilities = new ArrayList<>();
+
+        for(EngagementState state : EngagementState.values()) {
+            statusPossibilities.add(String.format(lodestarTagFormat, state));
+        }
+
+        LOGGER.debug("states {}", statusPossibilities);
+    }
     
     /**
      * Creates:
@@ -163,24 +178,11 @@ public class GitlabService {
     public void updateStatus(Engagement engagement) {
         Optional<Project> p = gitlabApiClient.getProject(engagement.getProjectId());
         if(p.isPresent()) {
-            boolean isSet = false;
             List<String> tags = p.get().getTagList();
+            tags.removeAll(statusPossibilities);
+
             String stateTag = String.format(lodestarTagFormat, engagement.getCurrentState());
-
-            for(int i=0; i<tags.size(); i++) {
-                if(tags.get(i).equals(stateTag)) {
-                    tags.set(i, stateTag);
-                    isSet = true;
-                }
-            }
-
-            if(!tags.contains(lodestarTag)) {
-                tags.add(lodestarTag);
-            }
-
-            if(!isSet) {
-                tags.add(stateTag);
-            }
+            tags.add(stateTag);
 
             gitlabApiClient.updateProject(p.get());
         }
@@ -236,8 +238,7 @@ public class GitlabService {
         if(currentCustomerGroupOption.isEmpty()) {
             throw new EngagementException(String.format("Current customer group was not found %s", currentPath));
         }
-        
-        Group engagementCurrentGroup = currentEngagementGroupOption.get();
+
         Group customerCurrentGroup = currentCustomerGroupOption.get();
         
         boolean customerChanged = !customerCurrentGroup.getName().equals(engagement.getName()) && 
