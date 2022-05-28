@@ -105,9 +105,7 @@ public class EngagementService {
             LOGGER.info("Attempting update of last activity for {} engagements", noUpdated.size());
             activityService.getLastActivityPerEngagement(noUpdated);
             engagementRepository.update(noUpdated);
-            LOGGER.info("Updated complete");
-        } else {
-            LOGGER.debug("Last Activity accounted for");
+            LOGGER.info("Last updated check completed with {} changes", noUpdated.size());
         }
     }
 
@@ -144,6 +142,8 @@ public class EngagementService {
         engagement.setLaunch(Launch.builder().launchedBy(author).launchedByEmail(authorEmail)
                 .launchedDateTime(Instant.now()).build());
 
+        LOGGER.debug("Launch ahoy {} -- {}", engagement.getUuid(), engagement.getState());
+        engagement.setCurrentState(engagement.getState());
         engagementRepository.update(engagement);
         engagement.setLastMessage(LAUNCH_MESSAGE);
 
