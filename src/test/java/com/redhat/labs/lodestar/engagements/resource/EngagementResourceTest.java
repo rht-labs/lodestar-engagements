@@ -431,6 +431,12 @@ class EngagementResourceTest {
     void testLaunchAlreadySuccess() {
         String uuid = "uuid1";
 
+        Optional<Engagement> launchedOption = engagementService.getEngagement("uuid1");
+        assertTrue(launchedOption.isPresent());
+        Engagement notLaunched = launchedOption.get();
+        assertEquals(EngagementState.UPCOMING, notLaunched.getState());
+        assertEquals(EngagementState.UPCOMING, notLaunched.getCurrentState());
+
         given().pathParam("uuid", uuid).queryParam("author", AUTHOR)
                 .queryParam("authorEmail", AUTHOR_EMAIL)
                 .contentType(ContentType.JSON)
@@ -439,6 +445,48 @@ class EngagementResourceTest {
         .then().statusCode(200);
 
         verify(gitlabService, timeout(1000).times(1)) .updateEngagementInGitlab(Mockito.any(Engagement.class));
+
+        launchedOption = engagementService.getEngagement("uuid1");
+        assertTrue(launchedOption.isPresent());
+        Engagement launched = launchedOption.get();
+        assertEquals(EngagementState.PAST, launched.getState());
+        assertEquals(EngagementState.PAST, launched.getCurrentState());
+    }
+
+    @Test
+    void testLaunchUpcomingToActive() {
+        Engagement e = Engagement.builder().customerName("fragment").name("rock").region("dev").type("DO500").build();
+        engagementService.create(e);
+
+        e.setStartDate(Instant.now().minus(7, ChronoUnit.DAYS));
+        e.setEndDate(Instant.now().plus(7, ChronoUnit.DAYS));
+        e.setEngagementLeadEmail("a@b.com");
+        e.setEngagementLeadName("A B");
+        e.setTechnicalLeadEmail("c@d.com");
+        e.setTechnicalLeadName("C D");
+        e.setCustomerContactName("E F");
+        e.setCustomerContactEmail("e@f.com");
+        e.setArchiveDate(Instant.now().plus(14, ChronoUnit.DAYS));
+
+        engagementService.update(e);
+
+        assertEquals(EngagementState.UPCOMING, e.getState());
+        assertEquals(EngagementState.UPCOMING, e.getCurrentState());
+
+        given().pathParam("uuid", e.getUuid()).queryParam("author", AUTHOR)
+                .queryParam("authorEmail", AUTHOR_EMAIL)
+                .contentType(ContentType.JSON)
+                .when()
+                .put("{uuid}/launch")
+                .then().statusCode(200);
+
+        verify(gitlabService, timeout(1000).times(2)) .updateEngagementInGitlab(Mockito.any(Engagement.class));
+
+        Optional<Engagement> launchedOption = engagementService.getEngagement(e.getUuid());
+        assertTrue(launchedOption.isPresent());
+        Engagement launched = launchedOption.get();
+        assertEquals(EngagementState.ACTIVE, launched.getState());
+        assertEquals(EngagementState.ACTIVE, launched.getCurrentState());
     }
 
     @Test
