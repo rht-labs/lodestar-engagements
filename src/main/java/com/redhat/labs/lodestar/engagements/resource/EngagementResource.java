@@ -166,7 +166,8 @@ public class EngagementResource {
     @PUT
     @Path("{uuid}/lastUpdate")
     public Response updateLastUpdate(@PathParam("uuid") String uuid) {
-        engagementService.updateLastUpdate(uuid);
+        String cleanUuid = uuid.replaceAll("[\n\r\t]", "_");
+        engagementService.updateLastUpdate(cleanUuid);
         return Response.ok().build();
     }
     
