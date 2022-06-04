@@ -41,7 +41,7 @@ public class CategoryService {
     
     public List<Category> getCategories(String engagementUuid) {
         List<Category> categories = categoryRepository.getCategories(engagementUuid);
-        LOGGER.debug("Categories for uuid {}", categories);
+        LOGGER.debug("Categories for uuid {} - {}", engagementUuid, categories);
         return categoryRepository.getCategories(engagementUuid);
     }
     

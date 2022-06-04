@@ -64,7 +64,7 @@ public class EngagementService {
     @PostConstruct
     public void setupJavers() {
         List<String> ignoredProps = Arrays.asList("id", "createdDate", "creationDetails", "lastMessage", "lastUpdateByEmail", "lastUpdateByName",
-                "lastUpdate", "projectId");
+                "lastUpdate", "projectId", "currentState");
 
         javers = JaversBuilder.javers().withListCompareAlgorithm(ListCompareAlgorithm.LEVENSHTEIN_DISTANCE)
                 .registerEntity(new EntityDefinition(Engagement.class, "uuid", ignoredProps)).build();
@@ -148,6 +148,7 @@ public class EngagementService {
         engagement.setLastMessage(LAUNCH_MESSAGE);
 
         bus.publish(UPDATE_ENGAGEMENT, engagement);
+        bus.publish(UPDATE_STATUS, engagement);
     }
 
     public void updateCount(String uuid, int count, String column) {
@@ -191,7 +192,7 @@ public class EngagementService {
 
         Diff diff = javers.compare(existing, engagement);
 
-        LOGGER.debug("diff {}", diff);
+        LOGGER.debug("diff {} ==> {}", diff.hasChanges(), diff);
 
         if (diff.hasChanges() || initialFieldUpdated) {
             updated = true;
