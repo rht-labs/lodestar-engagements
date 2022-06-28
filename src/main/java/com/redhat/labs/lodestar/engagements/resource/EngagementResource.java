@@ -53,6 +53,7 @@ public class EngagementResource {
         }
         return Response.ok(engagements).header(TOTAL_HEADER, total).build(); //no paging yet
     }
+
     @GET
     @Path("inStates")
     public Response getEngagements(@QueryParam("inStates") Set<EngagementState> states) {
@@ -64,7 +65,13 @@ public class EngagementResource {
         return Response.ok(engagements).header(TOTAL_HEADER, total).build();
     }
 
-    
+    @GET
+    @Path("byUser/{email}")
+    public Response getEngagementsForUser(@PathParam("email") String email, @QueryParam("engagementUuids") Set<String> engagementUuids, @BeanParam PageFilter pagingFilter) {
+        List<Engagement> engagements = engagementService.getEngagementsForUser(pagingFilter, email, engagementUuids);
+        return Response.ok(engagements).header(TOTAL_HEADER, engagements.size()).build();
+    }
+
     @GET
     @Path("category/{category}")
     @Operation(summary = "Gets a list of engagements that have use the category input.")
@@ -170,6 +177,7 @@ public class EngagementResource {
         engagementService.updateLastUpdate(cleanUuid);
         return Response.ok().build();
     }
+
     
     @PUT
     @Path("refresh")
@@ -183,6 +191,13 @@ public class EngagementResource {
         }
 
         return Response.ok().header(TOTAL_HEADER, newCount).build();
+    }
+
+    @PUT
+    @Path("refresh/state")
+    public Response updateStatesInGitlab() {
+        engagementService.updateAllEngagementStates();
+        return Response.ok().build();
     }
     
     @GET
