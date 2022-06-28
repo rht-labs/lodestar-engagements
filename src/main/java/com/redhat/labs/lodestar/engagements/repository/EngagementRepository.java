@@ -42,6 +42,22 @@ public class EngagementRepository implements PanacheMongoRepository<Engagement> 
                 .page(pageFilter.getPage(), pageFilter.getPageSize()).list();
     }
 
+    /**
+     *
+     * @param email the email id to match (tech lead, EL or customer contact)
+     * @param engagementIds a list of engagement ids that the user has participated in (from participant service)
+     * @return A list of engagements that include the email or engagement ids of participant
+     */
+    public List<Engagement> getEngagementsByUser(PageFilter pageFilter, String email, Set<String> engagementIds) {
+        List<Bson> ors = new ArrayList<>();
+
+        ors.add(eq("engagementLeadEmail", email));
+        ors.add(eq("technicalLeadEmail", email));
+        ors.add(eq("customerContactEmail", email));
+        ors.add(in("uuid", engagementIds));
+        return mongoCollection().find(or(ors)).sort(pageFilter.getBsonSort()).skip(pageFilter.getStartAt()).limit(pageFilter.getPageSize()).into(new ArrayList<>());
+    }
+
     public List<Engagement> getEngagements(PageFilter pageFilter, Set<String> regions, Set<String> types) {
         String query = "";
         Map<String, Object> params = new HashMap<>();

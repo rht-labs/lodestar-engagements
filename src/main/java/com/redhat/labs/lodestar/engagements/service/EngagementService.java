@@ -109,6 +109,14 @@ public class EngagementService {
         }
     }
 
+    public void updateAllEngagementStates() {
+        LOGGER.debug("Updating all states in gitlab");
+        engagementRepository.findAll().stream().forEach(e -> {
+                e.setCurrentState(e.getState());
+                bus.publish(UPDATE_STATUS, e);
+        });
+    }
+
     public void create(Engagement engagement) {
         if(engagement.getUuid() != null) { //This will not be true as long as we persist in lodestar-backend
             throw new WebApplicationException("UUID cannot be set before create", Status.BAD_REQUEST);
@@ -268,6 +276,10 @@ public class EngagementService {
 
         return filterEngagementsByState(engagements, inStates);
 
+    }
+
+    public List<Engagement> getEngagementsForUser(PageFilter pageFilter, String userEmail, Set<String> engagementUuids) {
+        return engagementRepository.getEngagementsByUser(pageFilter, userEmail, engagementUuids);
     }
 
     public long countEngagements(String input, String category, Set<String> regions, Set<String> types, Set<EngagementState> states) {

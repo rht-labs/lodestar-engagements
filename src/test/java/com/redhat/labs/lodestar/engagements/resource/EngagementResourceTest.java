@@ -255,6 +255,23 @@ class EngagementResourceTest {
     }
 
     @Test
+    void testGetEngagementByUser() {
+        String email = "Calem@calm.com";
+        given().pathParam("email", email).when().get("byUser/{email}")
+                        .then().body("size()", equalTo(0));
+
+        List<Engagement> engagements = engagementService.getEngagements();
+        engagements.forEach(e-> {
+            e.setEngagementLeadEmail(email);
+            engagementService.update(e, false);
+        });
+
+        given().pathParam("email", email).when().get("byUser/{email}")
+                .then().body("size()", equalTo(2));
+
+    }
+
+    @Test
     void testHeadLastUpdate() {
         String uuid = "uuid1";
         given().pathParam("uuid", uuid).when().head("{uuid}").then().statusCode(200)
@@ -306,9 +323,14 @@ class EngagementResourceTest {
 
     @Test
     void testCreateEngagementBadRequest() {
-        Engagement engagement = Engagement.builder().customerName("").region("na").type("Residency").build();
+        Engagement engagement = Engagement.builder().customerName("ab!!!").name("abcd").region("na").type("Residency").build();
         String e = new JsonMarshaller().toJson(engagement);
-        given().contentType(ContentType.JSON).when().body(e).post().then().statusCode(Status.BAD_REQUEST.getStatusCode()).header("Location", nullValue());
+        given().contentType(ContentType.JSON)
+                .when().body(e).post()
+                .then().statusCode(Status.BAD_REQUEST.getStatusCode())
+                    .header("Location", nullValue())
+                    .body("parameter_violations.size()", equalTo(1))
+                    .body("parameter_violations[0].value", equalTo("ab!!!"));
     }
 
     @Test
@@ -515,5 +537,10 @@ class EngagementResourceTest {
         List<Engagement> e = engagementService.getEngagements();
         given().pathParam("category", "philanthropy").queryParam("sort", "name|desc,customerName").when().get("category/{category}")
                 .then().statusCode(200).body("size()", equalTo(2)).header("x-total-engagements", equalTo("2"));
+    }
+
+    @Test
+    void testUpdateStates() {
+        given().when().put("refresh/state").then().statusCode(200);
     }
 }
