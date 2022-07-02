@@ -543,4 +543,41 @@ class EngagementResourceTest {
     void testUpdateStates() {
         given().when().put("refresh/state").then().statusCode(200);
     }
+
+    @Test
+    void testMissingGitlabProjects() {
+        Engagement engagement = Engagement.builder().name("DO500").customerName("Catfish Gym").region("na").projectId(20).build();
+        engagementService.create(engagement);
+        given().when().get("gitlab").then().statusCode(200).body("size()", equalTo(2))
+                .body("[0]", equalTo("Engagement Banana Hut banana uuid1"))
+                .body("[1]", equalTo("Engagement Banana Hut2 banana2 uuid2"));
+    }
+
+    @Test
+    void testRetryToGitlabInGitlabUpdate() {
+        //Update engagement files
+        Engagement engagement = Engagement.builder().name("DO500").customerName("Catfish Gym").region("na").projectId(20).build();
+        engagementService.create(engagement);
+
+        given().queryParam("uuid", engagement.getUuid()).when().put("retry").then().statusCode(200);
+    }
+
+    @Test
+    void testRetryToGitlabInGitlabCreate() {
+        //Create engagement riles
+        Engagement engagement = Engagement.builder().name("DO500").customerName("Catfish Gym").region("na").projectId(15).build();
+        engagementService.create(engagement);
+
+        given().queryParam("message", "mess").queryParam("uuid", engagement.getUuid()).when().put("retry").then().statusCode(200);
+    }
+
+    @Test
+    void testRetryToGitlabNotInGitlab() {
+        given().queryParam("uuid", "uuid1").when().put("retry").then().statusCode(200);
+    }
+
+    @Test
+    void testRetryToGitlabNotFound() {
+        given().queryParam("uuid", "uuidxxx").when().put("retry").then().statusCode(404).body("message", equalTo("Engagement not found for uuid uuidxxx"));
+    }
 }

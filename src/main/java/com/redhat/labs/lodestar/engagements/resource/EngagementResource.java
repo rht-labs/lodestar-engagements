@@ -156,6 +156,28 @@ public class EngagementResource {
         return Response.ok(engagementService.getEngagement(uuid)).build();
     }
 
+    @GET
+    @Path("gitlab")
+    @Operation(summary = "Gets a list of engagements that are in the db but not gitlab")
+    public Set<String> getEngagementsNotInGitlab() {
+        return engagementService.getEngagementsNotInGitlab();
+    }
+
+    @PUT
+    @APIResponses(value = {
+            @APIResponse(responseCode = "404", description = "Engagement does not exist (by uuid)"),
+            @APIResponse(responseCode = "200", description = "Engagement sent to gitlab") })
+    @Operation(summary = "Retries the persist to gitlab. Message only applies to updates. Will ignore")
+    @Path("retry")
+    public Response retryGitlabPersistence(@QueryParam("uuid") String uuid, @QueryParam("message") String message) {
+        Map<String, String> resp = engagementService.resendLastUpdateToGitlab(uuid, message);
+
+        if(resp.isEmpty()) {
+            return Response.ok().build();
+        }
+        return Response.status(Response.Status.NOT_FOUND).entity(resp).build();
+    }
+
     @PUT
     @Path("{uuid}/participants/{count}")
     public Response updateParticipants(@PathParam("uuid") String uuid, @PathParam("count") int count) {
