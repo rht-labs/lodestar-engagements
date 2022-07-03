@@ -41,6 +41,7 @@ public class GitlabApiClient {
     private static final String PROJECT_NAME = "iac";
     private static final String LAUNCHED_MESSAGE = "Launch Ahoy!";
     private static final String SUMMARY_MESSAGE = "Summary Update";
+    private static final String RETRY_MESSAGE = "RE-POST: ";
     private static final String DEPLOYMENT_KEY_PREFIX = "LodeStar";
     private static final String DEPLOYMENT_KEY_POSTFIX = "DK";
     private static final String ENGAGEMENT_JSON = "engagement.json";
@@ -483,6 +484,9 @@ public class GitlabApiClient {
         String engagementContent = json.toJson(engagement);
         
         String messagePrefix = engagement.getLastMessage().contains(EngagementService.LAUNCH_MESSAGE) ? LAUNCHED_MESSAGE : SUMMARY_MESSAGE;
+        if(engagement.isGitlabRetry()) {
+            messagePrefix = RETRY_MESSAGE + messagePrefix;
+        }
         String message = String.format("%s %s %s %n %s", messagePrefix, getEmoji(), getEmoji(), engagement.getLastMessage());
 
         CommitAction action = new CommitAction()

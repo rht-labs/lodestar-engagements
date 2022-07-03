@@ -28,7 +28,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @TypeName("Engagement")
 @EqualsAndHashCode
-@JsonIgnoreProperties(value = { "id" })
+@JsonIgnoreProperties(value = { "id", "gitlabRetry" })
 @JsonPropertyOrder(alphabetic = true)
 public class Engagement {
 
@@ -80,6 +80,8 @@ public class Engagement {
     private Instant lastUpdate;
 
     private EngagementState currentState;
+
+    private boolean gitlabRetry;
 
     @Builder.Default
     private Integer participantCount = 0;

@@ -169,7 +169,7 @@ public class EngagementResource {
             @APIResponse(responseCode = "200", description = "Engagement sent to gitlab") })
     @Operation(summary = "Retries the persist to gitlab. Message only applies to updates. Will ignore")
     @Path("retry")
-    public Response retryGitlabPersistence(@QueryParam("uuid") String uuid, @QueryParam("message") String message) {
+    public Response retryGitlabPersistence(@QueryParam("uuid") String uuid, @DefaultValue("") @QueryParam("message") String message) {
         Map<String, String> resp = engagementService.resendLastUpdateToGitlab(uuid, message);
 
         if(resp.isEmpty()) {

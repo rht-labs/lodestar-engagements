@@ -168,9 +168,11 @@ public class EngagementService {
         }
 
         Engagement engagement = option.get();
+        engagement.setGitlabRetry(true);
+        LOGGER.debug("last message ({}): {}", engagement.getUuid(), engagement.getLastMessage());
 
         if(gitlabService.doesProjectExist(engagement.getProjectId())) {
-            String lastMessage = message == null ? engagement.getLastMessage() : String.format("%s/n/r%s", engagement.getLastMessage() , message);
+            String lastMessage = engagement.getLastMessage() == null ? message : String.format("%s. %n%s", message, engagement.getLastMessage());
             engagement.setLastMessage(lastMessage);
 
             if(gitlabService.doesEngagementJsonExist(engagement.getProjectId())) {
