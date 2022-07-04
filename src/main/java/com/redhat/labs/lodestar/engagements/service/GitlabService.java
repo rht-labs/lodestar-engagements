@@ -90,11 +90,24 @@ public class GitlabService {
         gitlabApiClient.activateDeployKey(engagement.getProjectId());
 
         LOGGER.debug("hooks created");
-        String legacy = this.createLegacyJson(engagement);
-        gitlabApiClient.createEngagementFiles(engagement, legacy);
+        createEngagementFilesInGitlab(engagement);
         engagementService.update(engagement, false);
 
         LOGGER.debug("creation complete {}", engagement);
+    }
+
+    /**
+     * Only used when a failure occurred and the project was created but the files were not.
+     * @param engagement
+     */
+    @ConsumeEvent(value = EngagementService.CREATE_ENGAGEMENT_FILES, blocking = true)
+    public void createEngagementFiles(Engagement engagement) {
+        createEngagementFilesInGitlab(engagement);
+    }
+
+    private void createEngagementFilesInGitlab(Engagement engagement) {
+        String legacy = this.createLegacyJson(engagement);
+        gitlabApiClient.createEngagementFiles(engagement, legacy);
     }
     
     /**
@@ -127,7 +140,6 @@ public class GitlabService {
         }
 
         String legacy = updateLegacyJson(engagement);
-
         gitlabApiClient.updateEngagementFile(engagement, legacy);
         engagementService.update(engagement, false);
 
@@ -186,6 +198,28 @@ public class GitlabService {
 
             gitlabApiClient.updateProject(p.get());
         }
+    }
+
+    /**
+     * Fetches project data from gitlab
+     * @param projectId the gitlab project id
+     * @return true if project data is found otherwise false
+     */
+    public boolean doesProjectExist(int projectId) {
+        if(projectId < 2) {
+            return false;
+        }
+        Optional<Project> p = gitlabApiClient.getProject(projectId);
+        return p.isPresent();
+    }
+
+    /**
+     * Fetches engagement/engagement.json from gitlab
+     * @param projectId the gitlab project id
+     * @return true if the engagement.json is present otherwise false
+     */
+    public boolean doesEngagementJsonExist(int projectId) {
+        return gitlabApiClient.getEngagement(projectId).isPresent();
     }
 
     public void refreshCategories() {
@@ -293,7 +327,6 @@ public class GitlabService {
 
         JsonElement legacyElement = gson.fromJson(legacy, JsonElement.class);
         JsonObject legacyJsonObject = legacyElement.getAsJsonObject();
-
         return getLegacyJson(e, legacyJsonObject);
     }
 

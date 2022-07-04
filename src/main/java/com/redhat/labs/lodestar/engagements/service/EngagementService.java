@@ -36,6 +36,7 @@ public class EngagementService {
     public static final String CREATE_ENGAGEMENT = "create.engagement.event";
     public static final String DELETE_ENGAGEMENT = "delete.engagement.event";
     public static final String UPDATE_STATUS = "update.status.engagement.event";
+    public static final String CREATE_ENGAGEMENT_FILES = "create.engagement.file.event";
     public static final String LAUNCH_MESSAGE = "\uD83D\uDEA2 \uD83C\uDFF4\u200D☠️ \uD83D\uDE80";
     
     @Inject
@@ -133,6 +134,57 @@ public class EngagementService {
         engagementRepository.persist(engagement);
 
         bus.publish(CREATE_ENGAGEMENT, engagement);
+    }
+
+    /**
+     *
+     * @return A list of uuids that do not exist in gitlab
+     */
+    public Set<String> getEngagementsNotInGitlab() {
+        String message = "Engagement %s %s %s";
+        Set<String> missing = new TreeSet<>();
+        getEngagements().parallelStream().forEach(e -> {
+            if(!gitlabService.doesProjectExist(e.getProjectId())) {
+                missing.add(String.format(message, e.getCustomerName(), e.getName(), e.getUuid()));
+            }
+        });
+
+        return missing;
+    }
+
+    /**
+     * Re-fires a commit without commit info :(
+     * @param uuid
+     * @param message A message to add to the commit since it be recreated
+     * @return
+     */
+    public Map<String, String> resendLastUpdateToGitlab(String uuid, String message) {
+        LOGGER.debug("Retry update {}", uuid);
+        String messageKey = "message";
+        String messageValue = "%s not found for uuid %s";
+        Optional<Engagement> option = getEngagement(uuid);
+        if(option.isEmpty()) {
+            return  Map.of(messageKey, String.format(messageValue, "Engagement", uuid));
+        }
+
+        Engagement engagement = option.get();
+        engagement.setGitlabRetry(true);
+        LOGGER.debug("last message ({}): {}", engagement.getUuid(), engagement.getLastMessage());
+
+        if(gitlabService.doesProjectExist(engagement.getProjectId())) {
+            String lastMessage = engagement.getLastMessage() == null ? message : String.format("%s. %n%s", message, engagement.getLastMessage());
+            engagement.setLastMessage(lastMessage);
+
+            if(gitlabService.doesEngagementJsonExist(engagement.getProjectId())) {
+                bus.publish(UPDATE_ENGAGEMENT, engagement);
+            } else {
+                bus.publish(CREATE_ENGAGEMENT_FILES, engagement);
+            }
+        } else {
+            bus.publish(CREATE_ENGAGEMENT, engagement);
+        }
+
+        return Collections.emptyMap();
     }
 
     public void launch(String uuid, String author, String authorEmail) {
